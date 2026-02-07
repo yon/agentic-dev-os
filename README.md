@@ -216,6 +216,14 @@ DEPS_CMD       = cargo fetch
 
 ---
 
+## Acknowledgments
+
+This project is adapted from **[pedrohcgs/claude-code-my-workflow](https://github.com/pedrohcgs/claude-code-my-workflow)** by [Pedro H. C. Sant'Anna](https://psantanna.com). The original is a Claude Code workflow template for academic projects — multi-agent review, quality gates, adversarial QA, and orchestrator patterns for LaTeX/Beamer lecture slides and Quarto/R replication packages. It was developed over 6+ sessions building PhD course materials at Emory University (Econ 730: Causal Panel Data), producing 6 complete lecture decks with 800+ slides.
+
+This template takes the core architectural patterns (plan-first workflow, contractor-mode orchestrator, adversarial critic-fixer loops, quality scoring with 80/90/95 gates, specialized review agents, continuous learning via `[LEARN]` tags, and context preservation through session logging) and adapts them for general-purpose software engineering across any language or framework.
+
+---
+
 ## License
 
 MIT
