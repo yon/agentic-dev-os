@@ -1,0 +1,56 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git branch *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git fetch *)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "Bash(git stash *)",
+
+      "Bash(gh pr *)",
+      "Bash(gh run *)",
+      "Bash(gh api *)",
+      "Bash(gh repo *)",
+      "Bash(gh issue *)",
+
+      "Bash(make *)",
+      "Bash(make)",
+
+      "Bash(python3 *)",
+      "Bash(node *)",
+      "Bash(npx *)",
+      "Bash(npm *)",
+      "Bash(go *)",
+      "Bash(cargo *)",
+      "Bash(rustc *)",
+
+      "Bash(ls *)",
+      "Bash(wc *)",
+      "Bash(sort *)",
+      "Bash(mkdir *)",
+      "Bash(chmod *)",
+      "Bash(cp *)",
+      "Bash(mv *)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Review the conversation transcript. This project requires that ALL outputs are verified before completion: code must build, tests must pass, linters must be clean. Check if Claude verified its work during this response (ran make check, make test, make build, make lint, or equivalent commands). If verification was NOT performed and the task involved creating or modifying source code (.py, .ts, .js, .go, .rs, .java, .rb, .c, .cpp, .h, .hpp or test files), respond with {\"ok\": false, \"reason\": \"Verification not performed. Please run make check (or equivalent build/test/lint commands) and verify output before finishing.\"}. If verification was done, or the task did not involve code files, or the task was purely informational/planning, respond with {\"ok\": true}.",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
