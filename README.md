@@ -9,7 +9,7 @@ A ready-to-fork project template that enforces best engineering practices throug
 ## What This Template Provides
 
 ### Multi-Agent Code Review
-7 specialized agents that review your code from different angles — simultaneously:
+8 specialized agents that review your code from different angles — simultaneously:
 
 | Agent | Focus |
 |-------|-------|
@@ -20,6 +20,7 @@ A ready-to-fork project template that enforces best engineering practices throug
 | **performance-reviewer** | Algorithmic complexity, N+1 queries, memory |
 | **doc-reviewer** | API docs, README accuracy, stale docs |
 | **verifier** | Runs build/test/lint and reports pass/fail |
+| **team-lead** | Coordinates agent teams, enforces adversarial separation |
 
 ### Quality Gates (0-100 Scoring)
 Automated quality scoring with enforced thresholds:
@@ -39,7 +40,7 @@ Automated quality scoring with enforced thresholds:
 - **Separation of Concerns** — Pure core, impure shell
 - **TDD** — Tests first, always
 
-### 9 Slash Commands
+### 12 Slash Commands
 
 | Command | What It Does |
 |---------|-------------|
@@ -52,10 +53,24 @@ Automated quality scoring with enforced thresholds:
 | `/create-feature` | Full TDD feature workflow with planning |
 | `/fix-bug` | Root cause analysis + regression test workflow |
 | `/refactor` | Safe refactoring with test-first verification |
+| `/team-review` | Parallel agent team review (each reviewer in own session) |
+| `/team-implement` | Parallel implementation with adversarial critic-fixer loop |
+| `/swarm` | General-purpose agent team orchestration |
+
+### Agent Teams (Experimental — Opus 4.6)
+Spawn multiple Claude Code sessions that work in parallel:
+- **Parallel review** — 4 reviewers examining code simultaneously, each with full context
+- **Module-parallel implementation** — each teammate owns separate files, builds independently
+- **Adversarial pairs** — implementer writes, critic reviews, neither can do the other's job
+- **Research swarms** — multiple agents investigate different angles simultaneously
+- **TDD split** — test author writes failing tests, implementer makes them pass (true separation)
+
+**The Iron Rule:** The agent that writes code NEVER approves it. The agent that reviews NEVER edits. Always.
 
 ### Workflow Patterns
 - **Plan-First** — Non-trivial tasks start with a plan, saved to disk
 - **Contractor Mode** — After plan approval, autonomous implement → verify → review → fix → score
+- **Agent Teams** — Parallel multi-session execution with adversarial checks and balances
 - **Context Preservation** — Session logs, saved plans, `[LEARN]` tags
 - **Self-Documenting Makefile** — `make help` shows all available commands
 
@@ -95,26 +110,28 @@ your-project/
 ├── Makefile                           # Self-documenting build commands
 ├── .gitignore                         # Common ignores for all stacks
 ├── .claude/
-│   ├── settings.json                  # Permissions + verification hook
-│   ├── rules/                         # 9 auto-loaded engineering rules
+│   ├── settings.json                  # Permissions + verification hook + agent teams
+│   ├── rules/                         # 10 auto-loaded engineering rules
 │   │   ├── plan-first-workflow.md     # Plan → save → approve → implement
-│   │   ├── orchestrator-protocol.md   # Autonomous implement/verify/review loop
+│   │   ├── orchestrator-protocol.md   # Autonomous implement/verify/review loop + team mode
 │   │   ├── quality-gates.md           # 80/90/95 scoring rubrics
 │   │   ├── verification-protocol.md   # Build/test/lint verification checklist
 │   │   ├── engineering-principles.md  # DRY, KISS, SOLID, immutability, etc.
 │   │   ├── testing-protocol.md        # TDD cycle, test quality, coverage
 │   │   ├── security-practices.md      # OWASP, secrets, input validation
 │   │   ├── git-workflow.md            # Branches, commits, PRs
-│   │   └── code-conventions.md        # Naming, structure, patterns
-│   ├── agents/                        # 7 specialized review agents
+│   │   ├── code-conventions.md        # Naming, structure, patterns
+│   │   └── agent-teams.md            # Multi-session teams, adversarial patterns
+│   ├── agents/                        # 8 specialized agents
 │   │   ├── code-reviewer.md
 │   │   ├── security-reviewer.md
 │   │   ├── architecture-reviewer.md
 │   │   ├── test-reviewer.md
 │   │   ├── performance-reviewer.md
 │   │   ├── doc-reviewer.md
-│   │   └── verifier.md
-│   └── skills/                        # 9 slash commands
+│   │   ├── verifier.md
+│   │   └── team-lead.md              # Agent team coordinator
+│   └── skills/                        # 12 slash commands
 │       ├── build/SKILL.md
 │       ├── test/SKILL.md
 │       ├── lint/SKILL.md
@@ -123,7 +140,10 @@ your-project/
 │       ├── deploy/SKILL.md
 │       ├── create-feature/SKILL.md
 │       ├── fix-bug/SKILL.md
-│       └── refactor/SKILL.md
+│       ├── refactor/SKILL.md
+│       ├── team-review/SKILL.md       # Parallel agent team reviews
+│       ├── team-implement/SKILL.md    # Parallel implementation + adversarial review
+│       └── swarm/SKILL.md            # General-purpose agent teams
 ├── scripts/
 │   └── quality_score.py               # Automated quality scoring (0-100)
 ├── src/                               # Your application code

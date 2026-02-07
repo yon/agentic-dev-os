@@ -28,10 +28,13 @@
 | `/create-feature [name]` | Full feature creation workflow with planning |
 | `/fix-bug [issue]` | Structured bug fix workflow with root cause analysis |
 | `/refactor [scope]` | Safe refactoring with test-first verification |
+| `/team-review [scope]` | Parallel agent team code review (each reviewer in own session) |
+| `/team-implement [plan]` | Parallel agent team implementation with adversarial review |
+| `/swarm [task]` | General-purpose agent team orchestration |
 
-**Agents** (available for delegation): `code-reviewer`, `security-reviewer`, `architecture-reviewer`, `test-reviewer`, `performance-reviewer`, `doc-reviewer`, `verifier`
+**Agents** (available for delegation): `code-reviewer`, `security-reviewer`, `architecture-reviewer`, `test-reviewer`, `performance-reviewer`, `doc-reviewer`, `verifier`, `team-lead`
 
-**Rules** (auto-loaded): See `.claude/rules/` for rules on planning, quality gates, testing, security, code conventions, engineering principles, git workflow, and verification.
+**Rules** (auto-loaded): See `.claude/rules/` for rules on planning, quality gates, testing, security, code conventions, engineering principles, git workflow, verification, and agent teams.
 
 ---
 
@@ -66,8 +69,8 @@
 ├── .claude/                           # Claude Code configuration
 │   ├── settings.json                  # Project permissions + hooks
 │   ├── rules/                         # Engineering rules (auto-loaded)
-│   ├── skills/                        # Slash commands (/build, /test, etc.)
-│   └── agents/                        # Specialized review agents
+│   ├── skills/                        # Slash commands (/build, /test, /swarm, etc.)
+│   └── agents/                        # Specialized agents (review + team-lead)
 ├── src/                               # Application source code
 │   └── [YOUR STRUCTURE]
 ├── tests/                             # Test suite
@@ -134,6 +137,20 @@ See `.claude/rules/plan-first-workflow.md` for the full protocol.
 After a plan is approved, Claude operates in **contractor mode**: implement, verify (build + test + lint), review with agents, fix issues, and re-verify — all autonomously. The user sees a summary when the work meets quality standards or review rounds are exhausted. See `.claude/rules/orchestrator-protocol.md`.
 
 When you say "just do it", the orchestrator skips the final approval pause and auto-commits if the score is 80+.
+
+### Agent Teams (Parallel Multi-Session)
+
+For tasks that span multiple independent modules, Claude can spawn **agent teams** — multiple independent sessions working in parallel with peer-to-peer communication:
+
+- `/team-review` — spawn parallel reviewers (security + architecture + tests + code) each in their own context window
+- `/team-implement` — spawn parallel implementers with adversarial review (implementers ≠ reviewers, always)
+- `/swarm` — general-purpose team for research, debugging, or migration
+
+**The Iron Rule of Agent Teams:** The agent that writes the code NEVER approves it. The agent that reviews NEVER edits. This adversarial separation is non-negotiable — it ensures honest, independent quality assessment.
+
+See `.claude/rules/agent-teams.md` for patterns, file ownership rules, and team coordination protocols.
+
+> **Enable agent teams:** Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=true` in `.claude/settings.json` or as an environment variable.
 
 ### Continuous Learning with [LEARN] Tags
 
