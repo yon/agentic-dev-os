@@ -168,13 +168,13 @@ your-project/
 │       ├── team-implement/SKILL.md    # Parallel implementation + adversarial review
 │       └── swarm/SKILL.md             # General-purpose parallel subagents
 ├── scripts/
-│   └── quality_score.py               # Automated quality scoring (0-100)
+│   └── score.py               # Automated quality scoring (0-100)
 ├── src/                               # Your application code
 ├── tests/                             # Your test suite
 ├── docs/                              # Project documentation
-└── quality_reports/                   # Plans and session logs
+└── working/                   # Plans and logs
     ├── plans/
-    └── session_logs/
+    └── logs/
 ```
 
 ---

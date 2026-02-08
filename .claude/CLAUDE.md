@@ -85,11 +85,11 @@
 │   ├── integration/                   # Integration tests
 │   └── e2e/                           # End-to-end tests (if applicable)
 ├── scripts/                           # Utility and CI scripts
-│   └── quality_score.py               # Automated quality scoring (0-100)
+│   └── score.py               # Automated quality scoring (0-100)
 ├── docs/                              # Project documentation
-├── quality_reports/                    # Review & planning artifacts
+├── working/                    # Review & planning artifacts
 │   ├── plans/                         # Saved implementation plans
-│   └── session_logs/                  # Session history and decision logs
+│   └── logs/                  # Session history and decision logs
 └── [CONFIG FILES]                     # .env.example, pyproject.toml, etc.
 ```
 

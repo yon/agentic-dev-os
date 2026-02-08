@@ -15,7 +15,7 @@ Deploy the project to a target environment.
 
 1. Run `make check` (build + test + lint + typecheck)
 2. Verify all checks pass — **abort if any fail**
-3. For production: verify quality score >= 90 (`make quality-score`)
+3. For production: verify quality score >= 90 (`make score`)
 4. Check for uncommitted changes — warn if present
 
 ### 3. Deploy

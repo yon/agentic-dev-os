@@ -21,7 +21,7 @@ Guided workflow for creating a new feature following TDD and plan-first principl
    - Risks and edge cases
    - Verification steps
 
-3. **Save plan** to `quality_reports/plans/YYYY-MM-DD_feature-name.md`
+3. **Save plan** to `working/plans/YYYY-MM-DD_feature-name.md`
 
 4. **Present plan** and wait for approval
 

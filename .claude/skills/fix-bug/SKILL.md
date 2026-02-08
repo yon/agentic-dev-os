@@ -31,7 +31,7 @@ Systematic approach to diagnosing and fixing bugs with TDD regression testing.
 ### Phase 2: Fix
 
 5. **Plan the fix** — for non-trivial bugs:
-   - Save plan to `quality_reports/plans/YYYY-MM-DD_fix-description.md`
+   - Save plan to `working/plans/YYYY-MM-DD_fix-description.md`
    - Describe the root cause and the fix approach
 
 6. **Implement the fix** — minimal change that addresses the root cause

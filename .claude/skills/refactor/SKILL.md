@@ -26,7 +26,7 @@ Restructure code without changing behavior, verified by existing tests.
 3. **Run baseline** — `make check` must be GREEN before starting
 
 4. **Plan the refactoring** — for non-trivial changes:
-   - Save plan to `quality_reports/plans/YYYY-MM-DD_refactor-description.md`
+   - Save plan to `working/plans/YYYY-MM-DD_refactor-description.md`
    - List each refactoring step
    - Each step should be independently committable
 

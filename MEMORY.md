@@ -15,12 +15,12 @@
 
 **Session start:**
 1. `git log --oneline -10` — what changed recently?
-2. Check `quality_reports/plans/` for active plans
-3. Check `quality_reports/session_logs/` for recent session context
+2. Check `working/plans/` for active plans
+3. Check `working/logs/` for recent session context
 4. State what you understand the current task/goal to be
 
 **Session end:**
-1. Save session log to `quality_reports/session_logs/YYYY-MM-DD_description.md`
+1. Save session log to `working/logs/YYYY-MM-DD_description.md`
 2. Update this file if you learned something new
 3. Note any unresolved questions in the session log
 
@@ -38,7 +38,7 @@ Then implement the minimum code to make it pass. Then refactor.
 ### 2. Plan First
 For non-trivial tasks (3+ files, architectural decisions, new features):
 - Enter plan mode with `EnterPlanMode`
-- Save plan to `quality_reports/plans/YYYY-MM-DD_description.md`
+- Save plan to `working/plans/YYYY-MM-DD_description.md`
 - Get user approval before implementing
 Skip for: typo fixes, single-line changes, running commands.
 
@@ -55,7 +55,7 @@ Do NOT try to do everything sequentially in the main context.
 See "Subagent Patterns" below.
 
 ### 5. Session Logging
-Create or update a session log in `quality_reports/session_logs/` for every
+Create or update a session log in `working/logs/` for every
 significant work session. This preserves context across auto-compression.
 
 ### 6. Learn from Corrections

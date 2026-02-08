@@ -15,11 +15,11 @@ Quality Gates:
   95+ = Release threshold (production-ready)
 
 Usage:
-  python3 scripts/quality_score.py                    # Score entire project
-  python3 scripts/quality_score.py src/module.py      # Score specific file(s)
-  python3 scripts/quality_score.py --summary           # One-line summary
-  python3 scripts/quality_score.py --verbose           # Detailed breakdown
-  python3 scripts/quality_score.py --json              # JSON output
+  python3 scripts/score.py                    # Score entire project
+  python3 scripts/score.py src/module.py      # Score specific file(s)
+  python3 scripts/score.py --summary           # One-line summary
+  python3 scripts/score.py --verbose           # Detailed breakdown
+  python3 scripts/score.py --json              # JSON output
 
 Exit codes:
   0 = Score >= 80 (commit-ready)

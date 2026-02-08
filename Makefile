@@ -69,7 +69,7 @@ BOLD   := \033[1m
 .PHONY: help build test test-unit test-int test-e2e lint format typecheck \
         check clean deps security coverage \
         deploy-staging deploy-production \
-        quality-score _confirm-production
+        score _confirm-production
 
 # --- Help --------------------------------------------------------------------
 
@@ -160,8 +160,8 @@ clean: ## Remove build artifacts and caches
 
 # --- Quality Scoring ---------------------------------------------------------
 
-quality-score: ## Run quality score (0-100) against quality gates
-	@python3 scripts/quality_score.py --summary
+score: ## Run quality score (0-100) against quality gates
+	@python3 scripts/score.py --summary
 
 # --- Deployment --------------------------------------------------------------
 
