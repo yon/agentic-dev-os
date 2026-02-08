@@ -59,17 +59,17 @@ Automated quality scoring with enforced thresholds:
 | Command | What It Does |
 |---------|-------------|
 | `/build` | Build the project |
-| `/test` | Run test suite (unit, integration, or all) |
+| `/create-feature` | Full TDD feature workflow with planning |
+| `/deploy` | Deploy to staging/production with safety checks |
+| `/fix-bug` | Root cause analysis + regression test workflow |
 | `/lint` | Linters, formatters, and static analysis |
+| `/refactor` | Safe refactoring with test-first verification |
 | `/review` | Multi-agent code review (spawns subagents) |
 | `/security-audit` | OWASP, dependency audit, secrets scan |
-| `/deploy` | Deploy to staging/production with safety checks |
-| `/create-feature` | Full TDD feature workflow with planning |
-| `/fix-bug` | Root cause analysis + regression test workflow |
-| `/refactor` | Safe refactoring with test-first verification |
-| `/team-review` | Parallel subagent review (each reviewer in own context) |
-| `/team-implement` | Parallel implementation with adversarial review |
 | `/swarm` | General-purpose parallel subagent orchestration |
+| `/team-implement` | Parallel implementation with adversarial review |
+| `/team-review` | Parallel subagent review (each reviewer in own context) |
+| `/test` | Run test suite (unit, integration, or all) |
 
 ### Parallel Subagent Orchestration
 
@@ -84,7 +84,7 @@ Spawn multiple Claude Code subagents that work in parallel via the **Task tool**
 
 ### Workflow Patterns
 - **Plan-First** — Non-trivial tasks start with a plan, saved to disk
-- **Contractor Mode** — After plan approval, autonomous implement → verify → review → fix → score
+- **Development Mode** — After plan approval, autonomous implement → verify → review → fix → score
 - **Parallel Subagents** — Multi-context execution with adversarial checks and balances
 - **Context Preservation** — Session logs, saved plans, `[LEARN]` tags in MEMORY.md
 - **Self-Documenting Makefile** — `make help` shows all available commands
@@ -128,75 +128,61 @@ make help
 
 ```
 your-project/
-├── MEMORY.md                          # Template for auto-memory (copy to ~/.claude/...)
-├── Makefile                           # Self-documenting build commands
-├── .gitignore                         # Common ignores for all stacks
 ├── .claude/
 │   ├── CLAUDE.md                      # Claude's project guide (edit this first!)
 │   ├── settings.json                  # Permissions + verification hook
-│   ├── rules/                         # 10 auto-loaded engineering rules
-│   │   ├── plan-first-workflow.md     # Plan → save → approve → implement
-│   │   ├── orchestrator-protocol.md   # Autonomous implement/verify/review loop
-│   │   ├── quality-gates.md           # 80/90/95 scoring rubrics
-│   │   ├── verification-protocol.md   # Build/test/lint verification checklist
-│   │   ├── engineering-principles.md  # DRY, KISS, SOLID, immutability, etc.
-│   │   ├── testing-protocol.md        # TDD cycle, test quality, coverage
-│   │   ├── security-practices.md      # OWASP, secrets, input validation
-│   │   ├── git-workflow.md            # Branches, commits, PRs
-│   │   ├── code-conventions.md        # Naming, structure, patterns
-│   │   └── agent-teams.md             # Parallel subagent coordination via Task tool
 │   ├── agents/                        # 8 specialized agents
-│   │   ├── code-reviewer.md
-│   │   ├── security-reviewer.md
 │   │   ├── architecture-reviewer.md
-│   │   ├── test-reviewer.md
-│   │   ├── performance-reviewer.md
+│   │   ├── code-reviewer.md
 │   │   ├── doc-reviewer.md
+│   │   ├── performance-reviewer.md
+│   │   ├── security-reviewer.md
+│   │   ├── test-reviewer.md
 │   │   ├── verifier.md
-│   │   └── team-lead.md              # Subagent team coordinator
+│   ├── rules/                         # 10 auto-loaded engineering rules
+│   │   ├── agent-teams.md             # Parallel subagent coordination via Task tool
+│   │   ├── code-conventions.md        # Naming, structure, patterns
+│   │   ├── engineering-principles.md  # DRY, KISS, SOLID, immutability, etc.
+│   │   ├── git-workflow.md            # Branches, commits, PRs
+│   │   ├── orchestrator-protocol.md   # Autonomous implement/verify/review loop
+│   │   ├── plan-first-workflow.md     # Plan → save → approve → implement
+│   │   ├── quality-gates.md           # 80/90/95 scoring rubrics
+│   │   ├── security-practices.md      # OWASP, secrets, input validation
+│   │   ├── team-lead.md              # Subagent team coordinator
+│   │   ├── testing-protocol.md        # TDD cycle, test quality, coverage
+│   │   └── verification-protocol.md   # Build/test/lint verification checklist
 │   └── skills/                        # 12 slash commands
 │       ├── build/SKILL.md
-│       ├── test/SKILL.md
+│       ├── create-feature/SKILL.md
+│       ├── deploy/SKILL.md
+│       ├── fix-bug/SKILL.md
 │       ├── lint/SKILL.md
+│       ├── refactor/SKILL.md
 │       ├── review/SKILL.md
 │       ├── security-audit/SKILL.md
-│       ├── deploy/SKILL.md
-│       ├── create-feature/SKILL.md
-│       ├── fix-bug/SKILL.md
-│       ├── refactor/SKILL.md
-│       ├── team-review/SKILL.md       # Parallel subagent reviews
+│       ├── swarm/SKILL.md             # General-purpose parallel subagents
 │       ├── team-implement/SKILL.md    # Parallel implementation + adversarial review
-│       └── swarm/SKILL.md             # General-purpose parallel subagents
+│       ├── team-review/SKILL.md       # Parallel subagent reviews
+│       └── test/SKILL.md
+├── .gitignore                         # Common ignores for all stacks
+├── docs/                              # Project documentation
+├── Makefile                           # Self-documenting build commands
+├── MEMORY.md                          # Template for auto-memory (copy to ~/.claude/...)
 ├── scripts/
 │   └── score.py               # Automated quality scoring (0-100)
 ├── src/                               # Your application code
 ├── tests/                             # Your test suite
-├── docs/                              # Project documentation
 └── working/                   # Plans and logs
-    ├── plans/
-    └── logs/
+    ├── logs/
+    └── plans/
 ```
 
 ---
 
 ## Customization Guide
 
-### For Python Projects
-```makefile
-BUILD_CMD      = python -m build
-TEST_CMD       = pytest
-TEST_UNIT_CMD  = pytest tests/unit -x -q
-TEST_INT_CMD   = pytest tests/integration -x -q
-LINT_CMD       = ruff check src tests
-FORMAT_CMD     = ruff format src tests
-TYPECHECK_CMD  = mypy src
-SECURITY_CMD   = pip-audit
-COVERAGE_CMD   = pytest --cov=src --cov-report=html
-DEPS_CMD       = pip install -e ".[dev]"
-```
-
 ### For Node.js/TypeScript Projects
-```makefile
+```Makefile
 BUILD_CMD      = npm run build
 TEST_CMD       = npm test
 TEST_UNIT_CMD  = npx vitest run tests/unit
@@ -209,22 +195,30 @@ COVERAGE_CMD   = npx vitest run --coverage
 DEPS_CMD       = npm install
 ```
 
-### For Go Projects
-```makefile
-BUILD_CMD      = go build ./...
-TEST_CMD       = go test ./...
-TEST_UNIT_CMD  = go test ./internal/... ./pkg/...
-TEST_INT_CMD   = go test ./tests/integration/...
-LINT_CMD       = golangci-lint run
-FORMAT_CMD     = gofmt -w .
-TYPECHECK_CMD  = go vet ./...
-SECURITY_CMD   = govulncheck ./...
-COVERAGE_CMD   = go test -coverprofile=coverage.out ./... && go tool cover -html=coverage.out
-DEPS_CMD       = go mod download
+### For Python Projects
+
+Use a virtual environment to isolate dependencies:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+```
+
+```Makefile
+BUILD_CMD      = python -m build
+TEST_CMD       = pytest
+TEST_UNIT_CMD  = pytest tests/unit -x -q
+TEST_INT_CMD   = pytest tests/integration -x -q
+LINT_CMD       = ruff check src tests
+FORMAT_CMD     = ruff format src tests
+TYPECHECK_CMD  = mypy src
+SECURITY_CMD   = pip-audit
+COVERAGE_CMD   = pytest --cov=src --cov-report=html
+DEPS_CMD       = pip install -e ".[dev]"
 ```
 
 ### For Rust Projects
-```makefile
+```Makefile
 BUILD_CMD      = cargo build
 TEST_CMD       = cargo test
 TEST_UNIT_CMD  = cargo test --lib
@@ -236,14 +230,6 @@ SECURITY_CMD   = cargo audit
 COVERAGE_CMD   = cargo tarpaulin --out Html
 DEPS_CMD       = cargo fetch
 ```
-
----
-
-## Acknowledgments
-
-This project is adapted from **[pedrohcgs/claude-code-my-workflow](https://github.com/pedrohcgs/claude-code-my-workflow)** by [Pedro H. C. Sant'Anna](https://psantanna.com). The original is a Claude Code workflow template for academic projects — multi-agent review, quality gates, adversarial QA, and orchestrator patterns for LaTeX/Beamer lecture slides and Quarto/R replication packages. It was developed over 6+ sessions building PhD course materials at Emory University (Econ 730: Causal Panel Data), producing 6 complete lecture decks with 800+ slides.
-
-This template takes the core architectural patterns (plan-first workflow, contractor-mode orchestrator, adversarial critic-fixer loops, quality scoring with 80/90/95 gates, specialized review agents, continuous learning via `[LEARN]` tags, and context preservation through session logging) and adapts them for general-purpose software engineering across any language or framework.
 
 ---
 

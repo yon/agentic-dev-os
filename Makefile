@@ -31,7 +31,8 @@ COVERAGE_DIR   ?= coverage
 
 # Tools — replace with your stack's tools
 # Examples for common stacks:
-#   Python:     BUILD_CMD=python -m build, TEST_CMD=pytest, LINT_CMD=ruff check
+#   Python:     python3 -m venv .venv && source .venv/bin/activate
+#               BUILD_CMD=python -m build, TEST_CMD=pytest, LINT_CMD=ruff check
 #   Node.js:    BUILD_CMD=npm run build, TEST_CMD=npm test, LINT_CMD=eslint .
 #   Go:         BUILD_CMD=go build ./..., TEST_CMD=go test ./..., LINT_CMD=golangci-lint run
 #   Rust:       BUILD_CMD=cargo build, TEST_CMD=cargo test, LINT_CMD=cargo clippy
