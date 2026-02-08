@@ -1,75 +1,45 @@
-# =============================================================================
-# Software Project Template — .gitignore
-# =============================================================================
-# Customize for your specific language/framework.
-# This template covers common patterns across stacks.
-
-# --- Build Artifacts ---------------------------------------------------------
-build/
-dist/
-out/
-target/
-*.o
-*.so
-*.dylib
-*.dll
-*.exe
 *.class
+*.dll
+*.dylib
+*.egg-info/
+*.exe
 *.jar
-*.war
-
-# --- Dependencies ------------------------------------------------------------
-node_modules/
-vendor/
-.venv/
-venv/
-__pycache__/
+*.key
+*.lcov
+*.log
+*.o
+*.pem
 *.pyc
 *.pyo
-.eggs/
-*.egg-info/
-
-# --- IDE & Editor ------------------------------------------------------------
-.idea/
-.vscode/
-*.swp
+*.so
 *.swo
+*.swp
+*.war
 *~
 .DS_Store
-Thumbs.db
-
-# --- Environment & Secrets ---------------------------------------------------
-.env
-.env.local
-.env.*.local
-*.pem
-*.key
-credentials.*
-secrets.*
-
-# --- Test & Coverage ---------------------------------------------------------
-coverage/
+.claude/settings.local.json
 .coverage
-htmlcov/
+.eggs/
+.env
+.env.*.local
+.env.local
+.idea/
 .nyc_output/
-*.lcov
 .pytest_cache/
 .tox/
-
-# --- OS Files ----------------------------------------------------------------
-.DS_Store
-Thumbs.db
+.venv/
+.vscode/
 Desktop.ini
-
-# --- Logs --------------------------------------------------------------------
-*.log
-logs/
-
-# --- Package Manager Locks (uncomment the one you DON'T use) -----------------
-# package-lock.json
-# yarn.lock
-# pnpm-lock.yaml
-# Pipfile.lock
-# poetry.lock
-# go.sum
-# Cargo.lock
+Thumbs.db
+__pycache__/
+build/
+coverage/
+credentials.*
+dist/
+htmlcov/
+node_modules/
+out/
+secrets.*
+target/
+vendor/
+venv/
