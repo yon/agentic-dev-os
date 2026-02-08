@@ -33,7 +33,6 @@ Systematic approach to diagnosing and fixing bugs with TDD regression testing.
 5. **Plan the fix** — for non-trivial bugs:
    - Save plan to `quality_reports/plans/YYYY-MM-DD_fix-description.md`
    - Describe the root cause and the fix approach
-   - Consider: could this bug exist elsewhere? (systematic issue)
 
 6. **Implement the fix** — minimal change that addresses the root cause
    - Fix the root cause, not the symptom
@@ -43,10 +42,23 @@ Systematic approach to diagnosing and fixing bugs with TDD regression testing.
 
 8. **Run full suite** — `make check` — ensure no regressions
 
-### Phase 3: Verification
+### Phase 3: Review
 
-9. **Review** — run code-reviewer and test-reviewer agents
-10. **Verify** — run verifier agent
+9. **Spawn review subagents** using the Task tool:
+```
+Task(subagent_type="senior-code-reviewer",
+     prompt="<content of .claude/agents/code-reviewer.md>\n\n
+     Review this bug fix:\n{changed_files}\n
+     Root cause: {root_cause}\n
+     Verify the fix addresses the root cause, not just the symptom.")
+
+Task(subagent_type="senior-code-reviewer",
+     prompt="<content of .claude/agents/test-reviewer.md>\n\n
+     Review the regression test for this bug fix:\n{test_files}\n
+     Verify the test would catch a recurrence of this bug.")
+```
+
+10. **Verify** — `make check` passes after any review fixes
 
 ### Phase 4: Delivery
 
@@ -65,6 +77,12 @@ Systematic approach to diagnosing and fixing bugs with TDD regression testing.
 
     Closes #[issue]
     ```
+
+## Rules
+- ALWAYS write a regression test BEFORE fixing
+- The test must FAIL before the fix and PASS after
+- Minimal change: fix the bug, don't refactor surrounding code
+- Commit the test WITH the fix — they travel together
 
 ## Options
 - `/fix-bug [issue number or description]` — start with context

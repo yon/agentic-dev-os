@@ -136,7 +136,7 @@ quality_reports/plans/
 
 If starting a new session (or after heavy compression):
 
-1. Read `CLAUDE.md` for project context
+1. Read `.claude/CLAUDE.md` for project context
 2. Read the most recent plan in `quality_reports/plans/`
 3. Check `git log --oneline -10` for recent changes
 4. Check `git diff` for any uncommitted work

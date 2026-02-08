@@ -25,32 +25,38 @@ Guided workflow for creating a new feature following TDD and plan-first principl
 
 4. **Present plan** and wait for approval
 
-### Phase 2: Implementation (TDD)
+### Phase 2: TDD Red (Write Failing Tests)
+5. Write tests that describe the desired behavior
+6. Run tests — confirm they **FAIL**
+7. **If tests pass, STOP** — the feature already exists or the test is wrong
 
-After approval, the orchestrator takes over:
+### Phase 3: TDD Green (Implement)
+8. Write minimum code to make tests pass
+9. Run tests — confirm they **PASS**
 
-1. **Create feature branch** — `feature/[ticket]-short-description`
-2. **Write failing tests** — (RED)
-   - Happy path tests
-   - Error/edge case tests
-   - Integration tests (if applicable)
-3. **Run tests** — confirm they FAIL (validates the tests are meaningful)
-4. **Write implementation** — minimum code to pass tests (GREEN)
-5. **Run tests** — confirm they PASS
-6. **Refactor** — clean up while keeping tests green (REFACTOR)
-7. **Run full verification** — `make check`
+### Phase 4: Refactor
+10. Clean up while keeping tests green
+11. Run tests after each change
 
-### Phase 3: Review
+### Phase 5: Verify
+12. Run full verification: `make check`
 
-8. **Run `/review`** — multi-agent code review
-9. **Fix issues** — address critical and major findings
-10. **Re-verify** — `make check` again
+### Phase 6: Review (via subagents)
+13. Spawn review subagents using Task tool:
+```
+Task(subagent_type="senior-code-reviewer",
+     prompt="<content of .claude/agents/code-reviewer.md>\n\nReview: {changed_files}")
+```
+For API/security-sensitive changes, also spawn:
+```
+Task(subagent_type="security-code-auditor",
+     prompt="<content of .claude/agents/security-reviewer.md>\n\nAudit: {changed_files}")
+```
 
-### Phase 4: Delivery
-
-11. **Present summary** — what was built, test results, quality score
-12. **Commit** — with conventional commit message (`feat(scope): description`)
-13. **Suggest PR creation** — if ready for merge
+### Phase 7: Fix & Score
+14. Address Critical/Major review findings (max 3 rounds)
+15. Run `make check` after fixes
+16. Present summary with quality score
 
 ## Options
 - `/create-feature [name]` — start with a named feature

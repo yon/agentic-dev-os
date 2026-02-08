@@ -1,6 +1,6 @@
 # /security-audit — Security Audit
 
-Run a focused security review of the project.
+Run a focused security review of the project using specialized subagents.
 
 ---
 
@@ -15,12 +15,21 @@ Run a focused security review of the project.
 Run `make security` to check for known vulnerabilities in dependencies.
 
 ### 3. Code Audit
-Launch the **security-reviewer** agent on the target scope. The agent checks:
-- OWASP Top 10 vulnerabilities
-- Secrets/credentials in code
-- Input validation gaps
-- Authentication/authorization issues
-- Cryptographic misuse
+Spawn the security review subagent via the Task tool:
+
+```
+Task(subagent_type="security-code-auditor",
+     prompt="<content of .claude/agents/security-reviewer.md>\n\n
+     Perform a security audit of: {scope}\n\n
+     Check:\n
+     - OWASP Top 10 vulnerabilities\n
+     - Hardcoded secrets/credentials in source files\n
+     - Authentication/authorization patterns\n
+     - Input validation gaps\n
+     - Cryptographic misuse\n
+     - Dependency-level vulnerabilities\n\n
+     Return a structured report with severity ratings (Critical/High/Medium/Low).")
+```
 
 ### 4. Configuration Audit
 Review configuration files for:

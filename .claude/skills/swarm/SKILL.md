@@ -1,108 +1,112 @@
-# /swarm — General-Purpose Agent Team Orchestration
+# /swarm — General-Purpose Parallel Subagent Orchestration
 
-Flexibly spawn and manage an agent team for any task that benefits from parallel execution. This is the low-level team skill — use `/team-review` or `/team-implement` for those specific workflows.
+Flexibly spawn and manage parallel subagents for any task that benefits from concurrent execution. This is the low-level orchestration skill — use `/team-review` or `/team-implement` for those specific workflows.
 
 ---
 
 ## When to Use
 
-- Custom team compositions not covered by `/team-review` or `/team-implement`
+- Custom subagent compositions not covered by `/team-review` or `/team-implement`
 - Research/investigation tasks (multiple angles explored simultaneously)
 - Competing hypothesis debugging
 - Large-scale migrations or refactoring across many modules
-- Any task where you want full control over team structure
+- Any task where you want full control over parallel execution
 
 ---
 
 ## Steps
 
-### 1. Define the Team
+### 1. Define the Task
 
-Specify the team structure:
-- `/swarm [description]` — describe what you need, lead designs the team
-- `/swarm research [question]` — spawn a research team to investigate
+- `/swarm [description]` — describe what you need, lead designs the subagent team
+- `/swarm research [question]` — spawn a research swarm
 - `/swarm debug [issue]` — spawn competing hypothesis debuggers
 - `/swarm migrate [scope]` — spawn parallel migration workers
 
-### 2. Plan the Team (Lead)
+### 2. Plan the Subagent Team (Lead)
 
 Before spawning, the lead MUST:
 
-1. **Define each teammate's role** — what they do, what they don't do
+1. **Define each subagent's role** — what they do, what they don't do
 2. **Assign file ownership** — explicit, no overlaps for writers; unlimited for readers
-3. **Model dependencies** — which tasks depend on which
-4. **Enforce adversarial separation** — if any teammate writes code, a DIFFERENT teammate must review it
-5. **Set completion criteria** — what "done" looks like for each teammate
+3. **Model dependencies** — which tasks depend on which (spawn dependent ones after independent ones complete)
+4. **Enforce adversarial separation** — if any subagent writes code, a DIFFERENT subagent must review it
+5. **Set completion criteria** — what "done" looks like for each subagent
 
-Present the team plan to the user:
+Present the plan to the user:
 
 ```markdown
 ## Swarm Plan
 
-**Objective:** [what the team will accomplish]
-**Team Size:** [N teammates]
+**Objective:** [what the swarm will accomplish]
+**Subagents:** [N]
 **Estimated scope:** [files/modules affected]
 
-### Teammates
-| # | Role | Type | Files Owned | Depends On |
-|---|------|------|-------------|------------|
-| A | [role] | Writer/Reader | [files] | — |
-| B | [role] | Writer/Reader | [files] | A |
-| C | [role] | Reader (critic) | — | A, B |
+### Subagents
+| # | Role | Type | subagent_type | Files Owned | Depends On |
+|---|------|------|---------------|-------------|------------|
+| 1 | [role] | Writer | production-code-engineer | [files] | — |
+| 2 | [role] | Writer | code-shell-expert | [files] | — |
+| 3 | [role] | Reader (critic) | senior-code-reviewer | — | 1, 2 |
 
 ### Adversarial Checks
-- Implementers: [list]
-- Reviewers: [list]  (MUST be disjoint from implementers)
-
-### Completion Criteria
-- [ ] [Criterion 1]
-- [ ] [Criterion 2]
-- [ ] make check passes on combined result
+- Writers: [list]
+- Reviewers: [list] (MUST be disjoint from writers)
 ```
 
 ### 3. Get Approval
 
 Wait for user approval before spawning. (Skip if "just do it" mode is active.)
 
-### 4. Spawn Team
+### 4. Spawn Subagents
 
-Use `spawnTeam` with the approved plan. Each teammate gets a detailed prompt following the team-lead agent's prompt template.
+Use the Task tool with appropriate `subagent_type` values. Spawn independent subagents in the SAME response for parallel execution.
 
-### 5. Monitor and Coordinate
+**Available subagent types:**
+| subagent_type | Best For |
+|---------------|----------|
+| `senior-code-reviewer` | Code review, architecture review, test review |
+| `security-code-auditor` | Security audits, vulnerability analysis |
+| `production-code-engineer` | Writing production code, implementing features |
+| `code-shell-expert` | Shell scripts, system administration, infra code |
+| `Explore` | Codebase research, finding files, understanding patterns |
+| `Plan` | Designing implementation approaches |
 
-- Track progress via TaskList
-- Resolve blocked teammates via SendMessage
-- Handle unexpected issues (file conflicts, requirement changes)
-- Enforce the adversarial separation throughout
+```
+# Example: Research swarm (all read-only, spawn all at once)
+Task(subagent_type="Explore",
+     prompt="Trace the data flow from API endpoints to database for /users. Report the full path.")
 
-### 6. Collect and Verify
+Task(subagent_type="Explore",
+     prompt="Find all places where UserSession is created or modified. List files and line numbers.")
 
-After all teammates complete:
-1. **Collect results** — gather reports/summaries from all teammates
-2. **Integration verify** — `make check` on combined result
-3. **Adversarial review** — if any code was written, ensure it was reviewed by a different teammate
+Task(subagent_type="Explore",
+     prompt="Check git history for recent changes to the auth module. Summarize what changed and why.")
+```
+
+### 5. Collect and Verify
+
+After all subagents complete:
+1. **Collect results** — gather reports/summaries from all subagents
+2. **Integration verify** — `make check` on combined result (if code was written)
+3. **Adversarial review** — if any code was written, spawn review subagents
 4. **Score** — apply quality-gates rubric
 
-### 7. Present Results
+### 6. Present Results
 
 ```markdown
 ## Swarm Summary
 
 **Objective:** [what was accomplished]
-**Team:** [N] teammates, [N] rounds of adversarial review
+**Subagents:** [N], [N] rounds of adversarial review
 **Quality Score:** [N]/100
-**Duration:** [time from spawn to cleanup]
 
-### Teammate Results
+### Subagent Results
 | # | Role | Status | Key Output |
 |---|------|--------|------------|
-| A | [role] | Complete | [1-line summary] |
-| B | [role] | Complete | [1-line summary] |
-| C | [role] | Complete | [1-line summary] |
-
-### Adversarial Review Trail
-- [N] review rounds between critic(s) and implementer(s)
-- [N] issues found, [N] fixed, [N] remaining
+| 1 | [role] | Complete | [1-line summary] |
+| 2 | [role] | Complete | [1-line summary] |
+| 3 | [role] | Complete | [1-line summary] |
 
 ### Files Modified
 - [list with ownership attribution]
@@ -111,54 +115,51 @@ After all teammates complete:
 - make check: PASS/FAIL
 - Quality score: [N]/100
 
-### Findings / Answers / Deliverables
-[Main output of the swarm — research findings, implemented features, migration report, etc.]
+### Findings / Deliverables
+[Main output — research findings, implemented features, migration report, etc.]
 ```
-
-### 8. Cleanup
-
-Tear down the team. Log the summary to the session log.
 
 ---
 
-## Preset Team Templates
+## Preset Swarm Templates
 
 ### Research Swarm
 ```
 /swarm research "How does the auth system work?"
 
-Team:
-  A: Trace code flow from API endpoints (read-only)
-  B: Check git history and recent changes (read-only)
-  C: Read tests to understand expected behavior (read-only)
-  D: Search for related configuration and docs (read-only)
+Spawn 3-4 Explore subagents in parallel (all read-only):
+  1: Trace code flow from API endpoints
+  2: Read tests to understand expected behavior
+  3: Search for configuration and docs
+  4: Check git history for recent changes
 
-All read-only. Zero conflict risk. Maximum parallel exploration.
+Zero conflict risk. Maximum parallel exploration.
 ```
 
 ### Debug Swarm
 ```
 /swarm debug "Login fails intermittently"
 
-Team:
-  A: Check for race conditions in session handling (read-only)
-  B: Analyze database query patterns for timeouts (read-only)
-  C: Review recent changes to auth module via git blame (read-only)
-  D: Search logs and error patterns (read-only)
+Spawn 3-4 Explore subagents in parallel (all read-only):
+  1: Check for race conditions in session handling
+  2: Analyze database query patterns for timeouts
+  3: Review recent changes to auth module via git blame
+  4: Search for related error patterns
 
-Each forms a hypothesis → reports to lead → lead synthesizes.
+Each forms a hypothesis → lead synthesizes findings.
 ```
 
 ### Migration Swarm
 ```
 /swarm migrate "Update all API handlers to new error format"
 
-Team:
-  A: Migrate src/handlers/auth/* (writer)
-  B: Migrate src/handlers/users/* (writer)
-  C: Migrate src/handlers/payments/* (writer)
-  D: Update integration tests (writer, depends on A+B+C)
-  E: Review all changes (reader/critic, depends on A+B+C+D)
+Phase 1 — Spawn writers in parallel (one per module):
+  Task(subagent_type="production-code-engineer", prompt="Migrate src/handlers/auth/*...")
+  Task(subagent_type="production-code-engineer", prompt="Migrate src/handlers/users/*...")
+  Task(subagent_type="production-code-engineer", prompt="Migrate src/handlers/payments/*...")
+
+Phase 2 — After writers finish, spawn reviewer:
+  Task(subagent_type="senior-code-reviewer", prompt="Review all migrated files...")
 
 Clear file ownership. Critic reviews AFTER all writers finish.
 ```
@@ -167,8 +168,8 @@ Clear file ownership. Critic reviews AFTER all writers finish.
 
 ## Rules
 
-1. **Always plan before spawning** — team structure must be explicit
-2. **Always enforce adversarial separation** — writers ≠ reviewers
-3. **Always verify the combined result** — individual success ≠ integrated success
-4. **Always clean up** — don't leave orphaned teammate sessions
-5. **Prefer smaller teams** — 2-4 is the sweet spot; only go larger with clear justification
+1. **Always plan before spawning** — subagent structure must be explicit
+2. **Always enforce adversarial separation** — writers != reviewers
+3. **Always verify the combined result** — individual success != integrated success
+4. **Prefer smaller teams** — 2-4 subagents is the sweet spot; only go larger with clear justification
+5. **Spawn independent subagents in the same response** — this enables true parallel execution

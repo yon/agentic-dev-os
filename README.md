@@ -8,8 +8,20 @@ A ready-to-fork project template that enforces best engineering practices throug
 
 ## What This Template Provides
 
-### Multi-Agent Code Review
-8 specialized agents that review your code from different angles — simultaneously:
+### MEMORY.md — Behavioral Enforcement
+
+The most important file in the template. `MEMORY.md` is auto-loaded into Claude's system prompt every session via the auto-memory directory. It contains:
+
+- **7 Non-Negotiable Rules** — TDD first, plan first, verify before done, use subagents, session logging, learn from corrections, never /clear
+- **Subagent Patterns** — Concrete `Task(subagent_type=..., prompt=...)` invocations for reviews, security audits, and parallel work
+- **Verification Checklist** — What to run before presenting any code change
+- **Learned Patterns** — `[LEARN:tag]` entries that accumulate over sessions to prevent recurring mistakes
+
+Copy it to `~/.claude/projects/<project-path>/memory/MEMORY.md` for it to take effect.
+
+### Multi-Agent Code Review (via Task Tool Subagents)
+
+8 specialized agent definitions that review your code from different angles — simultaneously:
 
 | Agent | Focus |
 |-------|-------|
@@ -20,7 +32,9 @@ A ready-to-fork project template that enforces best engineering practices throug
 | **performance-reviewer** | Algorithmic complexity, N+1 queries, memory |
 | **doc-reviewer** | API docs, README accuracy, stale docs |
 | **verifier** | Runs build/test/lint and reports pass/fail |
-| **team-lead** | Coordinates agent teams, enforces adversarial separation |
+| **team-lead** | Coordinates subagent teams, enforces adversarial separation |
+
+Reviews are spawned as parallel subagents via the **Task tool** with `subagent_type` parameters. Agent definitions in `.claude/agents/` are injected into each subagent's prompt.
 
 ### Quality Gates (0-100 Scoring)
 Automated quality scoring with enforced thresholds:
@@ -47,31 +61,32 @@ Automated quality scoring with enforced thresholds:
 | `/build` | Build the project |
 | `/test` | Run test suite (unit, integration, or all) |
 | `/lint` | Linters, formatters, and static analysis |
-| `/review` | Combined multi-agent code review (6 dimensions) |
+| `/review` | Multi-agent code review (spawns subagents) |
 | `/security-audit` | OWASP, dependency audit, secrets scan |
 | `/deploy` | Deploy to staging/production with safety checks |
 | `/create-feature` | Full TDD feature workflow with planning |
 | `/fix-bug` | Root cause analysis + regression test workflow |
 | `/refactor` | Safe refactoring with test-first verification |
-| `/team-review` | Parallel agent team review (each reviewer in own session) |
-| `/team-implement` | Parallel implementation with adversarial critic-fixer loop |
-| `/swarm` | General-purpose agent team orchestration |
+| `/team-review` | Parallel subagent review (each reviewer in own context) |
+| `/team-implement` | Parallel implementation with adversarial review |
+| `/swarm` | General-purpose parallel subagent orchestration |
 
-### Agent Teams (Experimental — Opus 4.6)
-Spawn multiple Claude Code sessions that work in parallel:
-- **Parallel review** — 4 reviewers examining code simultaneously, each with full context
-- **Module-parallel implementation** — each teammate owns separate files, builds independently
+### Parallel Subagent Orchestration
+
+Spawn multiple Claude Code subagents that work in parallel via the **Task tool**:
+- **Parallel review** — 4 reviewers examining code simultaneously, each in their own context
+- **Module-parallel implementation** — each subagent owns separate files, builds independently
 - **Adversarial pairs** — implementer writes, critic reviews, neither can do the other's job
 - **Research swarms** — multiple agents investigate different angles simultaneously
-- **TDD split** — test author writes failing tests, implementer makes them pass (true separation)
+- **TDD split** — test author writes failing tests, implementer makes them pass
 
-**The Iron Rule:** The agent that writes code NEVER approves it. The agent that reviews NEVER edits. Always.
+**The Iron Rule:** The subagent that writes code NEVER approves it. The subagent that reviews NEVER edits. Always.
 
 ### Workflow Patterns
 - **Plan-First** — Non-trivial tasks start with a plan, saved to disk
 - **Contractor Mode** — After plan approval, autonomous implement → verify → review → fix → score
-- **Agent Teams** — Parallel multi-session execution with adversarial checks and balances
-- **Context Preservation** — Session logs, saved plans, `[LEARN]` tags
+- **Parallel Subagents** — Multi-context execution with adversarial checks and balances
+- **Context Preservation** — Session logs, saved plans, `[LEARN]` tags in MEMORY.md
 - **Self-Documenting Makefile** — `make help` shows all available commands
 
 ---
@@ -85,10 +100,17 @@ cd my-project
 ```
 
 ### 2. Customize
-1. Edit `CLAUDE.md` — replace all `[PLACEHOLDER]` values with your project info
+1. Edit `.claude/CLAUDE.md` — replace all `[PLACEHOLDER]` values with your project info
 2. Edit `Makefile` — replace `[PLACEHOLDER]` commands with your actual build/test/lint tools
 3. Edit `.claude/rules/code-conventions.md` — set naming conventions for your language
-4. Optionally edit `.claude/settings.json` — adjust allowed commands for your stack
+4. Copy `MEMORY.md` to your auto-memory directory:
+   ```bash
+   # The path uses dashes for each / in your project's absolute path
+   mkdir -p ~/.claude/projects/-Users-you-src-my-project/memory/
+   cp MEMORY.md ~/.claude/projects/-Users-you-src-my-project/memory/MEMORY.md
+   ```
+5. Edit the copied `MEMORY.md` — replace placeholders with your project info
+6. Optionally edit `.claude/settings.json` — adjust allowed commands for your stack
 
 ### 3. Start Claude Code
 ```bash
@@ -106,14 +128,15 @@ make help
 
 ```
 your-project/
-├── CLAUDE.md                          # Claude's project guide (edit this first!)
+├── MEMORY.md                          # Template for auto-memory (copy to ~/.claude/...)
 ├── Makefile                           # Self-documenting build commands
 ├── .gitignore                         # Common ignores for all stacks
 ├── .claude/
-│   ├── settings.json                  # Permissions + verification hook + agent teams
+│   ├── CLAUDE.md                      # Claude's project guide (edit this first!)
+│   ├── settings.json                  # Permissions + verification hook
 │   ├── rules/                         # 10 auto-loaded engineering rules
 │   │   ├── plan-first-workflow.md     # Plan → save → approve → implement
-│   │   ├── orchestrator-protocol.md   # Autonomous implement/verify/review loop + team mode
+│   │   ├── orchestrator-protocol.md   # Autonomous implement/verify/review loop
 │   │   ├── quality-gates.md           # 80/90/95 scoring rubrics
 │   │   ├── verification-protocol.md   # Build/test/lint verification checklist
 │   │   ├── engineering-principles.md  # DRY, KISS, SOLID, immutability, etc.
@@ -121,7 +144,7 @@ your-project/
 │   │   ├── security-practices.md      # OWASP, secrets, input validation
 │   │   ├── git-workflow.md            # Branches, commits, PRs
 │   │   ├── code-conventions.md        # Naming, structure, patterns
-│   │   └── agent-teams.md            # Multi-session teams, adversarial patterns
+│   │   └── agent-teams.md             # Parallel subagent coordination via Task tool
 │   ├── agents/                        # 8 specialized agents
 │   │   ├── code-reviewer.md
 │   │   ├── security-reviewer.md
@@ -130,7 +153,7 @@ your-project/
 │   │   ├── performance-reviewer.md
 │   │   ├── doc-reviewer.md
 │   │   ├── verifier.md
-│   │   └── team-lead.md              # Agent team coordinator
+│   │   └── team-lead.md              # Subagent team coordinator
 │   └── skills/                        # 12 slash commands
 │       ├── build/SKILL.md
 │       ├── test/SKILL.md
@@ -141,9 +164,9 @@ your-project/
 │       ├── create-feature/SKILL.md
 │       ├── fix-bug/SKILL.md
 │       ├── refactor/SKILL.md
-│       ├── team-review/SKILL.md       # Parallel agent team reviews
+│       ├── team-review/SKILL.md       # Parallel subagent reviews
 │       ├── team-implement/SKILL.md    # Parallel implementation + adversarial review
-│       └── swarm/SKILL.md            # General-purpose agent teams
+│       └── swarm/SKILL.md             # General-purpose parallel subagents
 ├── scripts/
 │   └── quality_score.py               # Automated quality scoring (0-100)
 ├── src/                               # Your application code

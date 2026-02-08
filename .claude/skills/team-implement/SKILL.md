@@ -1,6 +1,6 @@
-# /team-implement — Parallel Agent Team Implementation
+# /team-implement — Parallel Subagent Implementation
 
-Spawn a team of implementers to build a feature in parallel, followed by adversarial review. Each implementer owns specific files and runs their own TDD cycle.
+Spawn parallel implementation subagents to build a feature, followed by adversarial review via separate subagents. Each implementer owns specific files and runs their own TDD cycle.
 
 **Requires an approved plan.** If no plan exists, enter plan mode first.
 
@@ -10,7 +10,6 @@ Spawn a team of implementers to build a feature in parallel, followed by adversa
 
 - Feature spans **3+ independent modules** (API + service + repository, frontend + backend + tests)
 - Task can be **partitioned by file ownership** with no shared-file conflicts
-- Combined sequential implementation would take **> 20 minutes**
 - The plan clearly identifies **which files belong to which subtask**
 
 ## When NOT to Use
@@ -28,41 +27,43 @@ Spawn a team of implementers to build a feature in parallel, followed by adversa
 
 1. **Read the approved plan** — identify subtasks and file ownership
 2. **Validate partitioning:**
-   - No file appears in two teammate assignments
-   - Config files (package.json, go.mod, etc.) are owned by exactly ONE teammate
+   - No file appears in two subagent assignments
+   - Config files (package.json, go.mod, etc.) are owned by exactly ONE subagent
    - Test files are co-owned with their corresponding source files
-3. **Identify dependencies** between subtasks:
-   - Task B depends on Task A's interface? → Model as TaskList dependency
-   - Shared types needed? → One teammate defines types first, others depend on that task
+3. **Identify dependencies** between subtasks
 
-### Phase 2: Spawn Implementation Team
+### Phase 2: Spawn Implementation Subagents
+
+Spawn parallel Task calls, one per module. Each gets explicit file ownership and TDD instructions.
 
 ```
-Teammate A (Implementer — Module X):
-  Role: Implement [module X] following TDD
-  Files: src/module_x/*, tests/unit/test_module_x.*
-  Criteria: [acceptance criteria for module X]
-  Constraint: Do NOT edit files outside your assignment
+Task(subagent_type="production-code-engineer",
+     prompt="You are implementing Module X as part of a larger feature.\n\n
+     ## Your Assignment\n
+     Files you OWN (only edit these): src/module_x/*, tests/unit/test_module_x.*\n
+     Files you may READ: [shared types, interfaces]\n\n
+     ## Requirements\n
+     [acceptance criteria for module X]\n\n
+     ## TDD Workflow (MANDATORY)\n
+     1. Write failing tests FIRST\n
+     2. Implement minimum code to pass\n
+     3. Refactor while keeping tests green\n
+     4. Run tests: [test command for this module]\n\n
+     ## Constraints\n
+     - Do NOT edit files outside your assignment\n
+     - Follow the project's code conventions\n
+     - Return a summary of what you built and test results")
 
-Teammate B (Implementer — Module Y):
-  Role: Implement [module Y] following TDD
-  Files: src/module_y/*, tests/unit/test_module_y.*
-  Criteria: [acceptance criteria for module Y]
-  Constraint: Do NOT edit files outside your assignment
+Task(subagent_type="production-code-engineer",
+     prompt="You are implementing Module Y...[same pattern]")
 
-Teammate C (Integration — Wiring):
-  Role: Wire modules together, write integration tests
-  Files: src/main.*, tests/integration/*
-  Dependencies: Depends on Task A and Task B completing
-  Criteria: All modules work together, integration tests pass
+Task(subagent_type="production-code-engineer",
+     prompt="You are implementing integration wiring...\n
+     Dependencies: Module X and Module Y must be complete first.\n
+     Files you OWN: src/main.*, tests/integration/*\n...")
 ```
 
-Each implementer runs their own TDD loop:
-1. Write failing tests for their module
-2. Implement minimum code to pass
-3. Refactor
-4. Run their portion of the test suite
-5. Message lead when done
+**Note:** If subtasks have dependencies (e.g., integration depends on modules), run the independent tasks first, wait for results, then spawn dependent tasks.
 
 ### Phase 3: Integration (Lead)
 
@@ -70,77 +71,71 @@ After all implementers complete:
 
 1. **Run `make check`** on the combined result
 2. If integration fails:
-   - Identify which teammate's code caused the failure
-   - Message that teammate with the error and ask for a fix
+   - Identify which subagent's code caused the failure
+   - Spawn a fix subagent with the error context and the relevant files
    - Re-run `make check` after fix
 3. If integration passes: proceed to review
 
 ### Phase 4: Adversarial Review
 
-**The review team MUST be different agents than the implementation team.**
+**The review subagents MUST use different agent definitions than the implementation subagents.**
 
-Spawn a review team (via `/team-review` pattern):
+Spawn review subagents (via `/team-review` pattern):
 ```
-Review Teammate A: Code quality + principles review (read-only)
-Review Teammate B: Security review (read-only)
-Review Teammate C: Test quality review (read-only)
-```
+Task(subagent_type="senior-code-reviewer",
+     prompt="<.claude/agents/code-reviewer.md>\n\nReview: {all changed files}")
 
-Review teammates:
-- CANNOT edit files
-- Send findings to lead with severity ratings
-- Lead routes fixes to the appropriate implementer teammate
+Task(subagent_type="security-code-auditor",
+     prompt="<.claude/agents/security-reviewer.md>\n\nAudit: {all changed files}")
+
+Task(subagent_type="senior-code-reviewer",
+     prompt="<.claude/agents/test-reviewer.md>\n\nReview tests: {test files}")
+```
 
 ### Phase 5: Fix Loop
 
-```
-For each finding (Critical → Major → Minor):
-  1. Lead sends finding to the implementer that owns the relevant file
-  2. Implementer fixes → messages lead "fixed"
-  3. Lead runs make check
-  4. If more findings remain → repeat (max 5 rounds)
-```
+For each finding (Critical → Major):
+1. Spawn a fix subagent targeting the specific file with the finding
+2. Run `make check` after fix
+3. Repeat (max 3 rounds)
 
 ### Phase 6: Delivery
 
 1. **Final `make check`** — must pass
 2. **Score** — apply quality-gates rubric
-3. **Cleanup** — tear down all teams
-4. **Present summary** with team details:
+3. **Present summary:**
 
 ```markdown
 ## Team Implementation Summary
 
-**Mode:** Team Implementation (N implementers + M reviewers)
 **Task:** [from plan]
 **Quality Score:** [N]/100
 
-### Team Assignments
-| Teammate | Role | Files Owned | Status |
+### Subagent Assignments
+| Subagent | Role | Files Owned | Status |
 |----------|------|-------------|--------|
-| A | Implementer (Module X) | src/module_x/* | Complete |
-| B | Implementer (Module Y) | src/module_y/* | Complete |
-| C | Integration | src/main.*, tests/int/* | Complete |
-| D | Code Reviewer (read-only) | — | Reviewed |
-| E | Security Reviewer (read-only) | — | Reviewed |
+| 1 | Implementer (Module X) | src/module_x/* | Complete |
+| 2 | Implementer (Module Y) | src/module_y/* | Complete |
+| 3 | Integration | src/main.*, tests/int/* | Complete |
+| 4 | Code Reviewer (read-only) | — | Reviewed |
+| 5 | Security Reviewer (read-only) | — | Reviewed |
 
 ### Adversarial Review
 - Review rounds: [N]
 - Issues found: [N critical, N major, N minor]
 - Issues fixed: [N]
-- Remaining: [N or "none"]
 
-### Integration
-- File conflicts: none
-- Combined verification: PASS
+### Verification
+- make check: PASS
+- Quality score: [N]/100
 ```
 
 ---
 
 ## The Iron Rules
 
-1. **Implementers NEVER review their own code** — different teammates review
-2. **Reviewers NEVER edit code** — they report, implementers fix
+1. **Implementers NEVER review their own code** — different subagent types for review
+2. **Reviewers NEVER edit code** — they report, fix subagents fix
 3. **No shared file edits** — one owner per file, always
 4. **Every implementer runs TDD** — tests first, then implementation
-5. **Lead verifies the combined result** — individual "it works" isn't enough
+5. **Lead verifies the combined result** — individual success isn't enough

@@ -1,6 +1,6 @@
 # /review — Combined Multi-Agent Code Review
 
-Run a comprehensive, multi-dimensional code review using specialized agents.
+Run a comprehensive, multi-dimensional code review using specialized subagents via the Task tool.
 
 ---
 
@@ -14,19 +14,33 @@ Run a comprehensive, multi-dimensional code review using specialized agents.
 ### 2. Identify Changed Files
 Read the files to review. Understand what changed and the context around the changes.
 
-### 3. Select and Launch Agents
+### 3. Select and Launch Subagents
 
-Based on the nature of the changes, launch the appropriate agents **in parallel**:
+Based on the nature of the changes, read the appropriate agent definition files from `.claude/agents/` and spawn Task tool subagents **in parallel**:
 
-| Always Run | Conditional |
-|-----------|-------------|
-| **code-reviewer** | **security-reviewer** — if auth, input handling, config, or deps changed |
-| **test-reviewer** | **architecture-reviewer** — if new modules/services created or module boundaries changed |
-| | **performance-reviewer** — if data access, algorithms, or hot-path code changed |
-| | **doc-reviewer** — if public APIs or README changed |
+| Agent Definition | subagent_type | When to Spawn |
+|-----------------|---------------|---------------|
+| `code-reviewer.md` | `senior-code-reviewer` | Always |
+| `test-reviewer.md` | `senior-code-reviewer` | Always |
+| `security-reviewer.md` | `security-code-auditor` | If auth, input handling, config, or deps changed |
+| `architecture-reviewer.md` | `senior-code-reviewer` | If new modules/services created or boundaries changed |
+| `performance-reviewer.md` | `senior-code-reviewer` | If data access, algorithms, or hot-path code changed |
+| `doc-reviewer.md` | `senior-code-reviewer` | If public APIs or README changed |
 
-### 4. Run Verifier
-After agent reviews, run the **verifier** agent to confirm build/test/lint pass.
+**Example — spawn all selected reviewers in the same response:**
+```
+Task(subagent_type="senior-code-reviewer",
+     prompt="<content of .claude/agents/code-reviewer.md>\n\nReview: {changed_files}")
+
+Task(subagent_type="senior-code-reviewer",
+     prompt="<content of .claude/agents/test-reviewer.md>\n\nReview: {test_files}")
+
+Task(subagent_type="security-code-auditor",
+     prompt="<content of .claude/agents/security-reviewer.md>\n\nAudit: {changed_files}")
+```
+
+### 4. Run Verification
+After collecting agent reviews, run `make check` to confirm build/test/lint pass.
 
 ### 5. Compile Results
 
@@ -55,15 +69,12 @@ Merge all agent reports into a single summary:
 | Build | PASS/FAIL |
 | Tests | PASS/FAIL |
 | Lint | PASS/FAIL |
-| Type Check | PASS/FAIL |
 
 ### Agent Summaries
 - **Code Review:** [one-line summary]
 - **Security:** [one-line summary]
 - **Tests:** [one-line summary]
 - **Architecture:** [one-line summary]
-- **Performance:** [one-line summary]
-- **Documentation:** [one-line summary]
 
 ### Recommended Actions
 1. [Highest priority action]
