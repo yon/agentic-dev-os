@@ -1,17 +1,31 @@
----
-paths:
-  - "src/**"
-  - "tests/**"
----
-
 # Code Conventions
 
 **Consistency reduces cognitive load. These conventions apply project-wide.**
 
-<!-- ============================================================
-     HOW TO USE: Customize the [PLACEHOLDER] sections below
-     for your specific language and framework.
-     ============================================================ -->
+---
+
+## Linters as Canonical Standards
+
+**Linter configurations are the single source of truth for coding standards.** When prose documentation and linter config disagree, update the linter config — it is the canonical source.
+
+### Common Linter Stacks
+
+| Language | Linter | Formatter | Type Checker |
+|----------|--------|-----------|-------------|
+| Python | ruff | ruff format | mypy / pyright |
+| TypeScript/JS | eslint | prettier | tsc --strict |
+| Rust | clippy | rustfmt | (built-in) |
+
+### Rules
+
+- **Custom rules belong in linter config**, not in prose documentation
+- **Pre-commit hooks enforce linter compliance** — code that fails linting does not get committed
+- **Never disable a linter rule without documented justification:**
+  ```
+  # lint:ignore S101 — using assert for test preconditions, not production validation
+  ```
+- **Linter overrides require a reason in the comment** — bare `# noqa` or `// eslint-disable` is not acceptable
+- **Run `make lint` before every commit** — see `quality-and-verification.md` for the full checklist
 
 ---
 
@@ -26,7 +40,6 @@ paths:
 - Functions that perform actions are named for what they do: `send_email`, `delete_account`
 
 ### Conventions by Element
-<!-- Customize for your language. Examples below. -->
 
 | Element | Convention | Example |
 |---------|-----------|---------|
@@ -97,7 +110,7 @@ paths:
 
 ### Preferred Pattern (by language type)
 
-**For languages with Result types (Rust, Go, functional):**
+**For languages with Result types (Rust, functional):**
 ```
 // Return errors explicitly, handle at the caller
 fn get_user(id: UserId) -> Result<User, UserError>
@@ -136,6 +149,124 @@ fn get_user(id: UserId) -> Result<User, UserError>
 
 ---
 
+## Observability & Tracing
+
+**Every operation should produce a trace, not just a log line.** Structured tracing provides the context needed to diagnose issues in production.
+
+### Structured Tracing (OpenTelemetry-style)
+
+- Every operation creates a **span** with a name, start time, and end time
+- Spans nest to form a **trace** representing the full request lifecycle
+- Spans carry **attributes** — structured key-value pairs describing the operation
+- Logs are **events within spans**, not standalone entries
+
+### Key Span Attributes
+
+| Attribute | Example | Required? |
+|-----------|---------|-----------|
+| `trace.id` | `abc-123-def` | Yes |
+| `span.name` | `process_payment` | Yes |
+| `user.id` | `usr_xyz` | If applicable |
+| `http.method` | `POST` | If HTTP |
+| `http.status_code` | `200` | If HTTP |
+| `db.statement` | `SELECT ...` | If database (sanitized) |
+| `error.message` | `timeout after 5s` | If error |
+| `error.type` | `TimeoutError` | If error |
+
+### Correlation IDs
+
+Every request gets a unique ID that flows through all operations:
+- Generated at the system boundary (HTTP handler, message consumer)
+- Passed to every function, logged in every span
+- Returned in error responses so users can reference it in bug reports
+- Propagated to downstream services via headers (`X-Request-ID`, `traceparent`)
+
+### Structured Logging Within Spans
+
+Logs should be events within a trace context, not standalone lines:
+```
+# BAD — standalone log, no context
+logger.info("Payment processed")
+
+# GOOD — structured event within a span
+span.add_event("payment_processed", {
+    "amount": 49.99,
+    "currency": "USD",
+    "gateway": "stripe",
+    "duration_ms": 230
+})
+```
+
+---
+
+## Context-Rich Outputs
+
+**Every error, result, and log entry should include enough context to understand what happened without reproducing the scenario.**
+
+### Error Context
+
+Every error includes four elements:
+- **Operation** — what was being attempted
+- **Inputs** — the relevant data (sanitized of secrets)
+- **Expected outcome** — what should have happened
+- **Actual outcome** — what actually happened
+
+```
+BAD:  raise ValueError("invalid input")
+GOOD: raise ValueError(f"Cannot create order: quantity {qty} exceeds stock {available} for product {product_id}")
+
+BAD:  return Err("failed")
+GOOD: return Err(format!("Failed to connect to database at {host}:{port}: {err} (attempt {attempt}/{max_retries})"))
+```
+
+Cross-reference: See `engineering-principles.md` Fail Fast section for the full error context standard.
+
+### Result Pattern with Metadata
+
+When returning results, include operational metadata:
+```python
+@dataclass
+class Result:
+    value: Any
+    metadata: dict  # operation, duration_ms, source, cache_hit, etc.
+
+# Example
+return Result(
+    value=user,
+    metadata={
+        "operation": "get_user",
+        "duration_ms": 45,
+        "source": "database",
+        "cache_hit": False
+    }
+)
+```
+
+### API Response Standards
+
+Every API response includes:
+- **`request_id`** — correlation ID for tracing
+- **`timestamp`** — when the response was generated
+- **Error responses** additionally include: error code, human-readable message, and machine-readable details
+
+```json
+{
+  "request_id": "req_abc123",
+  "timestamp": "2026-02-22T10:30:00Z",
+  "error": {
+    "code": "INSUFFICIENT_STOCK",
+    "message": "Cannot fulfill order: only 3 units available for product P-456",
+    "details": {
+      "product_id": "P-456",
+      "requested": 5,
+      "available": 3
+    }
+  }
+}
+```
+
+---
+
 ## Dependency Management
 
 - **Pin versions** — exact versions in lock files
@@ -143,3 +274,53 @@ fn get_user(id: UserId) -> Result<User, UserError>
 - **Audit before adding** — check maintenance status, security advisories, license
 - **Group and document** — separate dev/test/prod dependencies, document why each exists
 - **Update regularly** — scheduled dependency updates (weekly or monthly)
+
+---
+
+## Local Module Context (.context.md)
+
+**Every module/directory with code files MUST have a `.context.md` file.** Claude reads this FIRST instead of exploring, giving immediate understanding of module purpose, interfaces, and state.
+
+### Template
+
+```markdown
+# Module: [name]
+
+## Purpose
+[1-2 sentences describing what this module does and why it exists]
+
+## Key Files
+- `file.ext` — [what it does]
+- `other_file.ext` — [what it does]
+
+## Public Interfaces
+- `function_name(params) -> return` — [brief description]
+- `ClassName` — [brief description]
+
+## Dependencies
+- Internal: [modules this depends on]
+- External: [third-party packages]
+
+## Recent Changes
+- [date]: [what changed and why]
+
+## Known Issues
+- [any open problems or technical debt]
+```
+
+### Maintenance Rules
+
+- **Created** when a new module is first implemented
+- **Updated** after every implementation phase (the orchestrator enforces this — see `orchestrator.md` Step 4)
+- **Reviewed** at session start when working on a module
+- **Accurate** — if `.context.md` is stale, update it before starting work
+
+### Including in Subagent Prompts
+
+When spawning subagents (see `agent-coordination.md`), read the relevant `.context.md` files and include their content in the task prompt. This gives subagents accurate module understanding without exploration overhead:
+
+```
+context = Read("src/payments/.context.md")
+Task(subagent_type="production-code-engineer",
+     prompt=f"Module context:\n{context}\n\nYour task: ...")
+```

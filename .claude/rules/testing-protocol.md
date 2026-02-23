@@ -1,9 +1,3 @@
----
-paths:
-  - "src/**"
-  - "tests/**"
----
-
 # Testing Protocol — TDD-First Development
 
 **Tests are not an afterthought. Tests are the FIRST code written for every feature and bug fix.**
@@ -182,3 +176,112 @@ Each section should be visually separated. One act and one logical assertion per
 4. **Verify the fix:** Run the test — confirm it now PASSES
 5. **Run full suite:** Confirm no regressions: `make test`
 6. **Commit the test WITH the fix** — they travel together, always
+
+---
+
+## Advanced Testing Techniques
+
+### Property-Based Testing
+
+Use property-based testing when a function should satisfy invariants across a wide input space.
+
+**When to use:**
+- Functions with wide input spaces (parsers, serializers, math operations)
+- Mathematical properties (commutativity, associativity, idempotency)
+- Serialization round-trips (`deserialize(serialize(x)) == x`)
+- Data transformations where output properties are predictable
+
+**Tools by language:**
+
+| Language | Library |
+|----------|---------|
+| Python | Hypothesis |
+| TypeScript/JS | fast-check |
+| Rust | proptest |
+
+**Write properties that hold for ALL valid inputs, not just examples:**
+```
+# Example: a sorted list should always have length equal to the input
+@given(lists(integers()))
+def test_sort_preserves_length(xs):
+    assert len(sorted(xs)) == len(xs)
+```
+
+### Mutation Testing
+
+Mutation testing validates that your tests actually catch bugs by introducing small changes (mutations) to your code and checking whether tests fail.
+
+**When to use:**
+- Validating test suite quality for critical paths
+- After a major refactor, to ensure tests are still meaningful
+- Periodically as a health check (not on every commit — it's slow)
+
+**Tools by language:**
+
+| Language | Library |
+|----------|---------|
+| Python | mutmut |
+| TypeScript/JS | Stryker |
+| Rust | cargo-mutants |
+
+**Targets:**
+- &gt;80% mutation kill rate for critical paths (auth, payments, data mutation)
+- &gt;60% mutation kill rate for general application code
+- Run periodically (weekly or per-sprint), not on every commit
+
+### Contract Testing
+
+Contract testing verifies that API boundaries between services honor their agreed-upon contracts.
+
+**When to use:**
+- Testing API boundaries between microservices
+- Validating API compatibility after changes
+- Ensuring providers don't break consumers
+
+**Tools:**
+
+| Tool | Approach |
+|------|----------|
+| Pact | Consumer-driven contracts |
+| Schemathesis | OpenAPI/Swagger-based fuzzing |
+| dredd | API Blueprint / OpenAPI validation |
+
+**Consumer-driven contracts:** consumers define the expectations, providers verify they meet them. This catches breaking changes before deployment.
+
+### Snapshot Testing
+
+Snapshot testing captures the output of a function and compares it against a stored reference.
+
+**When to use:**
+- Complex output that is tedious to assert manually (rendered HTML, serialized data, CLI output)
+- Output that changes intentionally but rarely
+
+**Warnings:**
+- Snapshots are **fragile** — any change to output format triggers a failure
+- Only use for output that changes **intentionally**, not frequently
+- **Always review snapshot updates manually** — don't blindly accept updates
+- Consider snapshots a supplement to behavioral assertions, not a replacement
+
+### Test Flakiness Management
+
+Flaky tests erode trust in the test suite. Manage them aggressively.
+
+**Detection:**
+- Track test pass/fail rates over time in CI
+- A test that fails > 1% of runs is flaky
+
+**Quarantine protocol:**
+1. Move flaky test to a separate suite (`tests/quarantine/`) that doesn't block CI
+2. File a ticket with the flaky test and suspected cause
+3. **Fix-or-delete deadline: 2 weeks.** If not fixed in 2 weeks, delete it.
+4. Never leave quarantined tests indefinitely — they rot.
+
+**Common causes and fixes:**
+
+| Cause | Fix |
+|-------|-----|
+| Time-dependent logic | Inject a clock, freeze time in tests |
+| Shared mutable state | Isolate test state, use fresh fixtures |
+| Network calls in unit tests | Mock external services |
+| Race conditions | Use proper synchronization, avoid sleep-based waits |
+| Order-dependent tests | Ensure tests are fully independent |

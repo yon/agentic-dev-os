@@ -1,3 +1,8 @@
+---
+name: swarm
+description: "General-purpose parallel subagent orchestration. Trigger: swarm, parallel, spawn agents, multi-agent, concurrent"
+---
+
 # /swarm — General-Purpose Parallel Subagent Orchestration
 
 Flexibly spawn and manage parallel subagents for any task that benefits from concurrent execution. This is the low-level orchestration skill — use `/team-review` or `/team-implement` for those specific workflows.

@@ -1,4 +1,4 @@
-# Parallel Subagent Coordination
+# Agent Coordination — Parallel Subagent & Team Patterns
 
 **Use the Task tool to spawn parallel subagents for work that benefits from concurrent execution.** Each subagent runs independently with its own context, and the lead (main session) coordinates.
 
@@ -22,6 +22,46 @@
 - **Tightly coupled changes** — if subagents would need to edit the same files, use sequential work
 - **Simple tasks** — coordination overhead isn't worth it for quick tasks
 - **Exploratory work** — when you don't know what files will be touched (explore first, then parallelize)
+
+---
+
+## Worktree Isolation
+
+**All non-trivial work happens in git worktrees.** This is the default for feature development, bug fixes, and refactoring.
+
+### Worktree-First Protocol
+
+| Skill | Worktree Command |
+|-------|-----------------|
+| `/create-feature [name]` | `EnterWorktree(name="feature-[name]")` |
+| `/fix-bug [issue]` | `EnterWorktree(name="fix-[issue]")` |
+| `/refactor [scope]` | `EnterWorktree(name="refactor-[scope]")` |
+
+Each worktree = one branch = one PR. This provides complete isolation from the main working tree.
+
+### Worktrees for Parallel Subagents
+
+When spawning implementation subagents that edit files, use `isolation: "worktree"` to give each subagent its own worktree. This eliminates file ownership conflicts entirely — each subagent works in a separate copy of the codebase.
+
+**Advantages over file-ownership partitioning:**
+- No risk of two subagents editing the same file
+- Each subagent can run `make check` independently
+- Failed subagent work can be discarded without affecting others
+- Clean merge at the end via git
+
+**When to use worktrees vs file-ownership:**
+
+| Approach | When | Trade-off |
+|----------|------|-----------|
+| Worktree isolation | Subagents touch overlapping files or uncertain boundaries | Higher setup cost, clean separation |
+| File-ownership partitioning | Clear module boundaries, no file overlap | Lower setup cost, requires strict discipline |
+
+### Worktree Cleanup
+
+After work is complete:
+- Merge the worktree branch back to the source branch
+- Delete the worktree
+- The system prompts for cleanup on session exit
 
 ---
 
@@ -56,6 +96,19 @@ agent_def = Read(".claude/agents/code-reviewer.md")
 # Spawn with the definition included
 Task(subagent_type="senior-code-reviewer",
      prompt=f"{agent_def}\n\nReview these files: {file_list}")
+```
+
+### Including Module Context in Prompts
+
+When spawning subagents, include relevant `.context.md` content in the task prompt. This gives subagents accurate module state without needing to explore:
+
+```
+# Read module context
+context = Read("src/auth/.context.md")
+
+# Include in subagent prompt
+Task(subagent_type="production-code-engineer",
+     prompt=f"Module context:\n{context}\n\nImplement: ...")
 ```
 
 ### Parallel Execution
@@ -120,6 +173,7 @@ Prevention:
 - Use directory-level ownership when possible ("You own src/auth/*, do not edit anything else")
 - If a shared file MUST be edited, sequence the tasks — one subagent edits first, then the other
 - Config files (package.json, go.mod) should be owned by exactly ONE subagent
+- When file boundaries are unclear, use worktree isolation instead
 
 ### 2. Context — Subagents Start Fresh
 
@@ -129,6 +183,7 @@ Subagents do NOT inherit the lead's conversation history. They only have:
 - Full codebase read access
 
 **Always include in task prompts:**
+- Relevant `.context.md` content for modules being worked on
 - Specific file paths the subagent will work on
 - Requirements and constraints
 - What "done" looks like
@@ -154,23 +209,35 @@ Individual subagent success does not guarantee integration success. The lead MUS
 
 ---
 
-## Integration with Orchestrator Protocol
+## Tool Preferences
 
-When the orchestrator determines that a task benefits from parallel execution:
+When choosing tools for subagent work, prefer reliability and low overhead:
 
-1. **Planning phase** identifies parallelizable subtasks
-2. **Orchestrator spawns subagents** instead of working sequentially
-3. **Each subagent runs its own TDD loop** (test → implement → verify)
-4. **Lead runs verification on the combined result** (`make check`)
-5. **Lead spawns review subagents** on the combined changes
-6. **Normal scoring and presentation** continues
+### Preference Order
 
----
+1. **Dedicated tools** — Read, Write, Edit, Glob, Grep (purpose-built, most reliable)
+2. **Bash CLI** — git, make, npm, pip, etc. (well-understood, scriptable)
+3. **MCP tools** — when dedicated tools or CLI don't cover the use case
+4. **WebFetch** — last resort for web content (prefer `/curl` skill when available)
 
-## Cost Awareness
+### Token Cost Awareness
 
 Parallel subagents use more API tokens than sequential work:
 - Each subagent has its own context (loaded with CLAUDE.md, agent definitions, file contents)
-- N subagents ≈ N× the token usage of sequential work
+- N subagents = approximately N times the token usage of sequential work
+- Include `.context.md` content to reduce exploration tokens
 
 **Use parallel subagents when concurrency provides genuine value** (time savings on independent tasks), not as a default mode.
+
+---
+
+## Integration with Orchestrator
+
+When the orchestrator (see `orchestrator.md`) determines that a task benefits from parallel execution:
+
+1. **Planning phase** identifies parallelizable subtasks
+2. **Orchestrator spawns subagents** instead of working sequentially
+3. **Each subagent runs its own TDD loop** (test → implement → update .context.md → verify)
+4. **Lead runs verification on the combined result** (`make check`)
+5. **Lead spawns review subagents** on the combined changes
+6. **Normal scoring and presentation** continues (see `quality-and-verification.md`)

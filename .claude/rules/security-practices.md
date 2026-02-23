@@ -1,15 +1,3 @@
----
-paths:
-  - "src/**"
-  - "*.env*"
-  - "*.json"
-  - "*.yaml"
-  - "*.yml"
-  - "*.toml"
-  - "Dockerfile*"
-  - "docker-compose*"
----
-
 # Security Practices
 
 **Security is not a feature — it's a property of every line of code.**

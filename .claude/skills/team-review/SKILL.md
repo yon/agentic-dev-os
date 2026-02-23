@@ -1,3 +1,8 @@
+---
+name: team-review
+description: "Parallel multi-agent code review from multiple angles. Trigger: team review, parallel review, multi-reviewer, thorough review"
+---
+
 # /team-review — Parallel Subagent Code Review
 
 Spawn parallel review subagents that examine the codebase simultaneously from different angles. Each reviewer runs in its own context via the Task tool.

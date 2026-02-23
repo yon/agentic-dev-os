@@ -14,21 +14,23 @@
 ## Session Protocol
 
 **Session start:**
-1. `git log --oneline -10` — what changed recently?
+1. Read `.context.md` files for modules you'll work on
 2. Check `working/plans/` for active plans
 3. Check `working/logs/` for recent session context
-4. State what you understand the current task/goal to be
+4. `git log --oneline -10` — what changed recently?
+5. State what you understand the current task/goal to be
 
 **Session end:**
 1. Save session log to `working/logs/YYYY-MM-DD_description.md`
-2. Update this file if you learned something new
-3. Note any unresolved questions in the session log
+2. Update `.context.md` for any modules you modified
+3. Update this file if you learned something new
+4. Note any unresolved questions in the session log
 
 ---
 
 ## Non-Negotiable Rules
 
-These 7 rules override all other guidance. Follow them every time.
+These 8 rules override all other guidance. Follow them every time.
 
 ### 1. TDD First
 BEFORE writing implementation code, write a failing test. Run it. Confirm it FAILS.
@@ -66,6 +68,20 @@ section below. This prevents the same mistake from recurring.
 Rely on auto-compression to manage long conversations. /clear destroys all
 context; auto-compression preserves what matters.
 
+### 8. Review Plans
+For non-trivial plans, run `/review-plan` to spawn architecture, test, and
+security reviewers on the plan file BEFORE implementation. Fix critical
+plan issues before writing code.
+
+---
+
+## Context-First Workflow
+
+**Always read `.context.md` FIRST.** Every module maintains a `.context.md` file
+that describes what's implemented, key files, interfaces, and dependencies.
+Read it instead of running Glob/Grep exploration. If it's missing, run
+`/explore-module [path]` to create it.
+
 ---
 
 ## Subagent Patterns
@@ -85,12 +101,6 @@ Task(subagent_type="security-code-auditor",
      prompt="<content of .claude/agents/security-reviewer.md>\n\nAudit these files: {list}")
 ```
 
-### Architecture Review
-```
-Task(subagent_type="senior-code-reviewer",
-     prompt="<content of .claude/agents/architecture-reviewer.md>\n\nReview: {scope}")
-```
-
 ### Parallel Reviews
 Spawn multiple Task calls in the SAME response for parallel execution:
 ```
@@ -102,11 +112,6 @@ Task 3: senior-code-reviewer with test-reviewer.md
 ### Research / Exploration
 ```
 Task(subagent_type="Explore", prompt="Find all files related to {topic}")
-```
-
-### Planning
-```
-Task(subagent_type="Plan", prompt="Design implementation for {feature}")
 ```
 
 ---
@@ -121,23 +126,21 @@ Run in order. Stop on first failure.
 
 <!-- Add project-specific checks below -->
 <!-- 4. `make typecheck` — zero type errors -->
-<!-- 5. `./scripts/lint-alpha.py --all` — zero violations -->
 
 ---
 
 ## Learned Patterns
 
 <!-- Add [LEARN:tag] entries as you discover project-specific patterns -->
-<!-- Examples: -->
-<!-- [LEARN:convention] Match arms must be alphabetized -->
-<!-- [LEARN:api] This endpoint expects snake_case, NOT camelCase -->
-<!-- [LEARN:test] Always mock the database layer in unit tests -->
-<!-- [LEARN:workflow] Use Task tool subagents, not TeammateTool -->
 
-[LEARN:workflow] TeammateTool/SendMessage/spawnTeam are NOT available — use Task tool with subagent_type
+[LEARN:workflow] Use Task tool with subagent_type for spawning subagents; SendMessage and TaskList are available in team contexts
 [LEARN:workflow] MEMORY.md is the #1 enforcement tool — it loads in system prompt every session
 [LEARN:workflow] Skills are prompt expansions — they must be explicit about what tools to use
 [LEARN:workflow] Rules in .claude/rules/ are auto-loaded context — don't duplicate in CLAUDE.md
+[LEARN:workflow] .context.md files are the default source of module context — read them first
+[LEARN:workflow] All non-trivial work happens in worktrees via EnterWorktree()
+[LEARN:workflow] Linter configs are the canonical coding standards, not prose docs
+[LEARN:workflow] Plans should be reviewed via /review-plan before implementation
 
 ---
 

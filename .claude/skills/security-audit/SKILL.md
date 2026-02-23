@@ -1,3 +1,8 @@
+---
+name: security-audit
+description: "Security review: OWASP, deps, secrets, permissions. Trigger: security audit, security review, vulnerability scan, OWASP check"
+---
+
 # /security-audit — Security Audit
 
 Run a focused security review of the project using specialized subagents.

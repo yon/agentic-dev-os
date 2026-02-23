@@ -1,3 +1,8 @@
+---
+name: deploy
+description: "Deploy to staging or production with safety checks. Trigger: deploy, ship, release, push to staging, push to production"
+---
+
 # /deploy — Deploy to Environment
 
 Deploy the project to a target environment.

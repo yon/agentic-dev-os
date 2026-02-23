@@ -2,7 +2,7 @@
 
 **After a plan is approved, the orchestrator takes over.** It implements, verifies, reviews, fixes, and scores autonomously — presenting results only when the work meets quality standards or fix rounds are exhausted.
 
-The plan-first workflow handles *what and why*. The orchestrator handles *how*, autonomously.
+The plan-first workflow (see `workflow.md`) handles *what and why*. The orchestrator handles *how*, autonomously.
 
 ---
 
@@ -10,7 +10,7 @@ The plan-first workflow handles *what and why*. The orchestrator handles *how*, 
 
 The orchestrator kicks in under these conditions:
 
-1. **After plan approval** — the standard trigger. Plan-first workflow step 7 hands off to the orchestrator.
+1. **After plan approval** — the standard trigger. The workflow's plan-first protocol step 7 hands off to the orchestrator.
 2. **"Just do it" mode** — when the user says "just do it", "you decide", or "handle it", skip the final presentation gate.
 3. **Skill delegation** — when a skill like `/create-feature` or `/refactor` reaches its implementation phase, the orchestrator loop governs execution.
 
@@ -18,7 +18,7 @@ The orchestrator does NOT activate for:
 
 - Single-file trivial edits (typo fix, rename a variable)
 - Purely informational questions
-- Running a standalone skill like `/build` or `/test`
+- Running a standalone skill like `/test` or `/lint`
 
 ---
 
@@ -33,22 +33,34 @@ Plan approved → orchestrator activates
   │
   Step 3: REFACTOR — Clean up while keeping tests green (TDD refactor phase)
   │
-  Step 4: VERIFY — Run verifier (make check: build + test + lint + typecheck)
+  Step 4: UPDATE CONTEXT — Update .context.md for every module touched
+  │
+  Step 5: VERIFY — Run verifier (make check: build + test + lint + typecheck)
   │         If verification fails → fix errors → re-verify
   │
-  Step 5: REVIEW — Select and run review agents (see Agent Selection)
+  Step 6: REVIEW — Select and run review agents (see Agent Selection)
   │
-  Step 6: FIX — Apply fixes from reviews (Critical → Major → Minor)
+  Step 7: FIX — Apply fixes from reviews (Critical → Major → Minor)
   │
-  Step 7: RE-VERIFY — Run make check again to confirm fixes are clean
+  Step 8: RE-VERIFY — Run make check again to confirm fixes are clean
   │
-  Step 8: SCORE — Apply quality-gates rubric
+  Step 9: SCORE — Apply quality-gates rubric (see quality-and-verification.md)
   │
   └── Score >= threshold?
         YES → Present summary to user
-        NO  → Loop back to Step 5 (max 5 review-fix rounds)
+        NO  → Loop back to Step 6 (max 5 review-fix rounds)
               After max rounds → present summary with remaining issues
 ```
+
+### Step 4: UPDATE CONTEXT
+
+After refactoring, update the `.context.md` file for every module that was modified. Include:
+- **What changed** — new functions, modified interfaces, deleted code
+- **New interfaces** — any new public APIs or contracts
+- **Updated dependencies** — new imports, changed external calls
+- **Design decisions** — rationale for implementation choices made during the build phase
+
+This step ensures that future sessions and subagents start with accurate module state. See `code-conventions.md` for the `.context.md` template and maintenance rules.
 
 ### Agent Selection
 
@@ -98,6 +110,9 @@ When the loop completes (score >= threshold or max rounds), present a structured
 ### Files Created/Modified
 - `path/to/file` — [what changed]
 
+### Context Files Updated
+- `path/to/.context.md` — [modules updated]
+
 ### Tests
 - [N] tests written, [N] passing, [N] failing
 
@@ -111,7 +126,7 @@ When the loop completes (score >= threshold or max rounds), present a structured
 - [e.g., "Run /security-audit for deeper analysis"]
 ```
 
-Append the summary to the session log (Rule 5b of plan-first-workflow).
+Append the summary to the session log (see `workflow.md` incremental logging).
 
 ---
 
@@ -131,7 +146,7 @@ When the user signals blanket approval ("just do it", "you decide", "handle it")
 
 ## Team-Based Orchestration
 
-When a plan contains **parallelizable subtasks with clear file ownership**, the orchestrator may use agent teams instead of sequential execution.
+When a plan contains **parallelizable subtasks with clear file ownership**, the orchestrator may use agent teams instead of sequential execution. See `agent-coordination.md` for detailed coordination patterns.
 
 ### When to Use Team Mode
 
@@ -159,7 +174,7 @@ Plan approved → orchestrator evaluates parallelizability
         │
         Step 2: SPAWN TEAM — Create teammates with clear prompts
         │       Each teammate runs their own TDD mini-loop:
-        │       write tests → implement → refactor → verify their portion
+        │       write tests → implement → refactor → update .context.md → verify their portion
         │
         Step 3: MONITOR — Track progress via task list
         │       Intervene only if a teammate is blocked
@@ -178,7 +193,7 @@ Plan approved → orchestrator evaluates parallelizability
         │
         Step 9: CLEANUP — Tear down the team
         │
-        Step 10: SCORE — Apply quality-gates rubric
+        Step 10: SCORE — Apply quality-gates rubric (see quality-and-verification.md)
         │
         └── Score >= threshold?
               YES → Present summary
@@ -241,6 +256,9 @@ When team mode is used, extend the orchestrator summary:
 ### Integration
 - File conflicts: [none / resolved]
 - Combined verification: PASS/FAIL
+
+### Context Files Updated
+- [list of .context.md files updated by each teammate]
 
 [... rest of standard summary ...]
 ```

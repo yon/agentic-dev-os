@@ -1,8 +1,39 @@
-# Software Workflow Template for Claude Code
+# Agentic Development Framework for Claude Code
 
-A ready-to-fork project template that enforces best engineering practices through Claude Code's multi-agent review system, quality gates, and TDD-first workflows.
+An installable framework that enforces best engineering practices through Claude Code's multi-agent review system, quality gates, and TDD-first workflows. Run `./install.sh` to add it to any existing project.
 
-**Inspired by** [pedrohcgs/claude-code-my-workflow](https://github.com/pedrohcgs/claude-code-my-workflow) — adapted from academic slide development to general-purpose software engineering.
+**Target audience:** Teams working on **existing codebases** with AI agents. Refactoring, not greenfield.
+
+---
+
+## Design Philosophy
+
+### The Development Loop
+
+Every task follows one loop. Every rule, skill, and agent maps to exactly one stage:
+
+```
+UNDERSTAND → PLAN → VALIDATE → BUILD → VERIFY → REVIEW → SHIP → OBSERVE
+     ↑                                                              |
+     └──────────────────────────────────────────────────────────────┘
+```
+
+| Stage | What Happens | Key Skills |
+|-------|-------------|------------|
+| **Understand** | Read `.context.md`, explore modules | `/explore-module` |
+| **Plan** | Decompose into tracer bullets | `/decompose` |
+| **Validate** | Agents review the plan before code | `/review-plan` |
+| **Build** | TDD, one tracer bullet at a time | `/create-feature`, `/fix-bug`, `/refactor` |
+| **Verify** | Linters as law, tests as contract | `/lint`, `/test` |
+| **Review** | Multi-agent code review | `/review`, `/team-review` |
+| **Ship** | Small PR, one tracer bullet per PR | `/deploy` |
+| **Observe** | Tracing, context-rich outputs | — |
+
+### Two Foundational Behaviors
+
+1. **Module State Files (`.context.md`)** — Every module maintains a `.context.md` that Claude reads FIRST instead of exploring. Updated after every implementation phase. Context persists across sessions.
+
+2. **Worktree Enforcement** — All non-trivial work happens in git worktrees. Each worktree = one branch = one PR. Multiple features can progress simultaneously.
 
 ---
 
@@ -10,18 +41,14 @@ A ready-to-fork project template that enforces best engineering practices throug
 
 ### MEMORY.md — Behavioral Enforcement
 
-The most important file in the template. `MEMORY.md` is auto-loaded into Claude's system prompt every session via the auto-memory directory. It contains:
+The most important file. Auto-loaded into Claude's system prompt every session via the auto-memory directory. Contains:
 
-- **7 Non-Negotiable Rules** — TDD first, plan first, verify before done, use subagents, session logging, learn from corrections, never /clear
-- **Subagent Patterns** — Concrete `Task(subagent_type=..., prompt=...)` invocations for reviews, security audits, and parallel work
-- **Verification Checklist** — What to run before presenting any code change
-- **Learned Patterns** — `[LEARN:tag]` entries that accumulate over sessions to prevent recurring mistakes
+- **8 Non-Negotiable Rules** — TDD first, plan first, verify before done, use subagents, session logging, learn from corrections, never /clear, review plans
+- **Context-First Workflow** — read `.context.md` before exploring
+- **Subagent Patterns** — concrete `Task(subagent_type=..., prompt=...)` invocations
+- **Learned Patterns** — `[LEARN:tag]` entries that accumulate over sessions
 
-Copy it to `~/.claude/projects/<project-path>/memory/MEMORY.md` for it to take effect.
-
-### Multi-Agent Code Review (via Task Tool Subagents)
-
-8 specialized agent definitions that review your code from different angles — simultaneously:
+### Multi-Agent Code Review (8 Specialists)
 
 | Agent | Focus |
 |-------|-------|
@@ -32,95 +59,97 @@ Copy it to `~/.claude/projects/<project-path>/memory/MEMORY.md` for it to take e
 | **performance-reviewer** | Algorithmic complexity, N+1 queries, memory |
 | **doc-reviewer** | API docs, README accuracy, stale docs |
 | **verifier** | Runs build/test/lint and reports pass/fail |
-| **team-lead** | Coordinates subagent teams, enforces adversarial separation |
-
-Reviews are spawned as parallel subagents via the **Task tool** with `subagent_type` parameters. Agent definitions in `.claude/agents/` are injected into each subagent's prompt.
+| **team-lead** | Coordinates subagent teams, adversarial separation |
 
 ### Quality Gates (0-100 Scoring)
-Automated quality scoring with enforced thresholds:
+
 - **80** = Commit (tests pass, no lint errors, no security issues)
 - **90** = PR/Merge (high coverage, clean architecture, documented)
 - **95** = Release (production-ready, performance validated)
 
 ### Engineering Principles (Enforced, Not Aspirational)
-- **DRY** — Don't Repeat Yourself
-- **KISS** — Keep It Simple, Stupid
-- **SOLID** — Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion
-- **Immutability** — Const by default, mutate only when justified
-- **Strong Typing** — Make illegal states unrepresentable
-- **Dependency Injection** — Pass dependencies, don't reach for globals
-- **Composition over Inheritance** — Build behavior by combining pieces
-- **Fail Fast** — Validate at boundaries, crash on invalid state
-- **Separation of Concerns** — Pure core, impure shell
-- **TDD** — Tests first, always
 
-### 12 Slash Commands
+DRY, KISS, SOLID, Immutability, Strong Typing, Dependency Injection, Composition over Inheritance, Fail Fast (with context-in-errors), Separation of Concerns, Explicit over Implicit.
+
+### 14 Slash Commands
 
 | Command | What It Does |
 |---------|-------------|
-| `/build` | Build the project |
-| `/create-feature` | Full TDD feature workflow with planning |
+| `/create-feature` | Full TDD feature workflow with tracer bullets |
 | `/deploy` | Deploy to staging/production with safety checks |
 | `/fix-bug` | Root cause analysis + regression test workflow |
-| `/lint` | Linters, formatters, and static analysis |
-| `/refactor` | Safe refactoring with test-first verification |
-| `/review` | Multi-agent code review (spawns subagents) |
+| `/lint` | Linters, formatters, static analysis; `/lint setup` scaffolds linter stack |
+| `/refactor` | Safe incremental refactoring with characterization tests |
+| `/review` | Multi-agent code review; `/review --plan` reviews plans |
+| `/review-plan` | Review plans before implementation |
+| `/explore-module` | Build/update `.context.md` for a module |
+| `/decompose` | Break features into tracer bullet stories/tasks |
 | `/security-audit` | OWASP, dependency audit, secrets scan |
 | `/swarm` | General-purpose parallel subagent orchestration |
 | `/team-implement` | Parallel implementation with adversarial review |
-| `/team-review` | Parallel subagent review (each reviewer in own context) |
-| `/test` | Run test suite (unit, integration, or all) |
+| `/team-review` | Parallel subagent review (each in own context) |
+| `/test` | Run tests — unit, integration, e2e, mutation, property, flaky |
 
-### Parallel Subagent Orchestration
+### 9 Engineering Rules (Auto-Loaded)
 
-Spawn multiple Claude Code subagents that work in parallel via the **Task tool**:
-- **Parallel review** — 4 reviewers examining code simultaneously, each in their own context
-- **Module-parallel implementation** — each subagent owns separate files, builds independently
-- **Adversarial pairs** — implementer writes, critic reviews, neither can do the other's job
-- **Research swarms** — multiple agents investigate different angles simultaneously
-- **TDD split** — test author writes failing tests, implementer makes them pass
+| Rule | Governs |
+|------|---------|
+| `workflow.md` | 8-stage dev loop, plan-first, session logging |
+| `orchestrator.md` | Autonomous implement → verify → review → fix → score |
+| `quality-and-verification.md` | 80/90/95 scoring, verification checklist |
+| `git-and-delivery.md` | Branches, commits, PRs, work decomposition |
+| `agent-coordination.md` | Parallel subagents, worktrees, tool preferences |
+| `engineering-principles.md` | DRY, KISS, SOLID, fail fast, context-in-errors |
+| `code-conventions.md` | Naming, linters-as-law, observability, `.context.md` |
+| `testing-protocol.md` | TDD, property-based, mutation, contract testing |
+| `security-practices.md` | OWASP, secrets, auth/authz, dependency security |
 
-**The Iron Rule:** The subagent that writes code NEVER approves it. The subagent that reviews NEVER edits. Always.
+### Git Guardrails
 
-### Workflow Patterns
-- **Plan-First** — Non-trivial tasks start with a plan, saved to disk
-- **Development Mode** — After plan approval, autonomous implement → verify → review → fix → score
-- **Parallel Subagents** — Multi-context execution with adversarial checks and balances
-- **Context Preservation** — Session logs, saved plans, `[LEARN]` tags in MEMORY.md
-- **Self-Documenting Makefile** — `make help` shows all available commands
+A PreToolUse hook blocks destructive git commands (force push, reset --hard, clean -f, branch -D, checkout ., restore .) and suggests safe alternatives.
 
 ---
 
 ## Quick Start
 
-### 1. Clone
+### Install into an existing project
+
 ```bash
-git clone <this-repo> my-project
-cd my-project
+# From a cloned copy of this repo:
+./install.sh /path/to/your-project
+
+# Or specify a local source explicitly:
+./install.sh --source /path/to/agentic-dev-os /path/to/your-project
 ```
 
-### 2. Customize
-1. Edit `.claude/CLAUDE.md` — replace all `[PLACEHOLDER]` values with your project info
-2. Edit `Makefile` — replace `[PLACEHOLDER]` commands with your actual build/test/lint tools
-3. Edit `.claude/rules/code-conventions.md` — set naming conventions for your language
-4. Copy `MEMORY.md` to your auto-memory directory:
-   ```bash
-   # The path uses dashes for each / in your project's absolute path
-   mkdir -p ~/.claude/projects/-Users-you-src-my-project/memory/
-   cp MEMORY.md ~/.claude/projects/-Users-you-src-my-project/memory/MEMORY.md
-   ```
-5. Edit the copied `MEMORY.md` — replace placeholders with your project info
-6. Optionally edit `.claude/settings.json` — adjust allowed commands for your stack
+The installer will:
+1. **Detect your stack** (Python, TypeScript, Rust, Go, Java) and pre-fill Makefile commands
+2. **Copy framework files** (`.claude/`, `scripts/`, `working/`)
+3. **Merge `.gitignore`** (appends new entries, never overwrites)
+4. **Set up auto-memory** (computes the correct `~/.claude/projects/` path automatically)
+5. **Validate** everything was installed correctly
+6. **Ask if you want Claude to analyze your project** and fill in CLAUDE.md placeholders
 
-### 3. Start Claude Code
 ```bash
-claude
+# Options
+./install.sh --force        # Overwrite existing .claude/
+./install.sh --no-detect    # Skip stack auto-detection
+./install.sh --dry-run      # Preview without making changes
+./install.sh --help         # Full usage info
 ```
 
-### 4. Verify Setup
+### After installing
+
+```bash
+cd your-project
+claude                      # Start Claude Code
 ```
-make help
-```
+
+Then either paste the analysis prompt (printed by the installer) or manually edit:
+1. `.claude/CLAUDE.md` — replace `[PLACEHOLDER]` values with your project info
+2. `Makefile` — verify/fix any remaining `[PLACEHOLDER]` commands
+3. `MEMORY.md` — replace `[PROJECT NAME]` and update project state
+4. Run `make help` to verify
 
 ---
 
@@ -130,49 +159,64 @@ make help
 your-project/
 ├── .claude/
 │   ├── CLAUDE.md                      # Claude's project guide (edit this first!)
-│   ├── settings.json                  # Permissions + verification hook
+│   ├── settings.json                  # Permissions + hooks (git guardrails, verification)
+│   ├── hooks/
+│   │   └── block-dangerous-git.sh     # Blocks destructive git commands
 │   ├── agents/                        # 8 specialized agents
 │   │   ├── architecture-reviewer.md
 │   │   ├── code-reviewer.md
 │   │   ├── doc-reviewer.md
 │   │   ├── performance-reviewer.md
 │   │   ├── security-reviewer.md
+│   │   ├── team-lead.md
 │   │   ├── test-reviewer.md
-│   │   ├── verifier.md
-│   ├── rules/                         # 10 auto-loaded engineering rules
-│   │   ├── agent-teams.md             # Parallel subagent coordination via Task tool
-│   │   ├── code-conventions.md        # Naming, structure, patterns
-│   │   ├── engineering-principles.md  # DRY, KISS, SOLID, immutability, etc.
-│   │   ├── git-workflow.md            # Branches, commits, PRs
-│   │   ├── orchestrator-protocol.md   # Autonomous implement/verify/review loop
-│   │   ├── plan-first-workflow.md     # Plan → save → approve → implement
-│   │   ├── quality-gates.md           # 80/90/95 scoring rubrics
-│   │   ├── security-practices.md      # OWASP, secrets, input validation
-│   │   ├── team-lead.md              # Subagent team coordinator
-│   │   ├── testing-protocol.md        # TDD cycle, test quality, coverage
-│   │   └── verification-protocol.md   # Build/test/lint verification checklist
-│   └── skills/                        # 12 slash commands
-│       ├── build/SKILL.md
-│       ├── create-feature/SKILL.md
+│   │   └── verifier.md
+│   ├── rules/                         # 9 auto-loaded engineering rules
+│   │   ├── workflow.md                # Dev loop, plan-first, session logging
+│   │   ├── orchestrator.md            # Autonomous implement/verify/review loop
+│   │   ├── quality-and-verification.md # Scoring rubrics + verification checklist
+│   │   ├── git-and-delivery.md        # Branches, commits, PRs, work decomposition
+│   │   ├── agent-coordination.md      # Subagents, worktrees, tool preferences
+│   │   ├── engineering-principles.md  # DRY, KISS, SOLID, fail fast
+│   │   ├── code-conventions.md        # Naming, linters, observability, .context.md
+│   │   ├── testing-protocol.md        # TDD, advanced testing techniques
+│   │   └── security-practices.md      # OWASP, secrets, auth
+│   └── skills/                        # 14 slash commands + supporting files
+│       ├── create-feature/
+│       │   ├── SKILL.md               # TDD + tracer bullet workflow
+│       │   ├── tests.md               # Good vs bad tests guide
+│       │   └── tracer-bullets.md     # Decomposition guide
+│       ├── decompose/SKILL.md         # Feature → tracer bullet stories
 │       ├── deploy/SKILL.md
-│       ├── fix-bug/SKILL.md
-│       ├── lint/SKILL.md
-│       ├── refactor/SKILL.md
-│       ├── review/SKILL.md
+│       ├── explore-module/SKILL.md    # Build/update .context.md
+│       ├── fix-bug/SKILL.md           # Root cause + regression test
+│       ├── lint/
+│       │   ├── SKILL.md               # Linters-as-law workflow
+│       │   └── linter-stacks.md       # Config examples per language
+│       ├── refactor/
+│       │   ├── SKILL.md               # Safe incremental refactoring
+│       │   ├── catalog.md             # Common refactoring moves
+│       │   └── characterization-tests.md # Test code you don't understand
+│       ├── review/SKILL.md            # Multi-agent review + plan review
+│       ├── review-plan/SKILL.md       # Plan review before implementation
 │       ├── security-audit/SKILL.md
-│       ├── swarm/SKILL.md             # General-purpose parallel subagents
-│       ├── team-implement/SKILL.md    # Parallel implementation + adversarial review
-│       ├── team-review/SKILL.md       # Parallel subagent reviews
-│       └── test/SKILL.md
-├── .gitignore                         # Common ignores for all stacks
-├── docs/                              # Project documentation
+│       ├── swarm/SKILL.md             # General parallel orchestration
+│       ├── team-implement/SKILL.md    # Parallel implementation
+│       ├── team-review/SKILL.md       # Parallel review
+│       └── test/
+│           ├── SKILL.md               # Test runner + TDD modes
+│           └── advanced.md            # Property, mutation, contract testing
+├── .gitignore
+├── docs/
+├── install.sh                         # Framework installer (run this first)
 ├── Makefile                           # Self-documenting build commands
-├── MEMORY.md                          # Template for auto-memory (copy to ~/.claude/...)
+├── MEMORY.md                          # Template for auto-memory
 ├── scripts/
-│   └── score.py               # Automated quality scoring (0-100)
+│   └── score.py                       # Automated quality scoring (0-100)
 ├── src/                               # Your application code
-├── tests/                             # Your test suite
-└── working/                   # Plans and logs
+│   └── [module]/.context.md           # Module state files
+├── tests/
+└── working/                           # Plans and logs
     ├── logs/
     └── plans/
 ```
@@ -230,6 +274,15 @@ SECURITY_CMD   = cargo audit
 COVERAGE_CMD   = cargo tarpaulin --out Html
 DEPS_CMD       = cargo fetch
 ```
+
+---
+
+## Attribution
+
+Built with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) by [Anthropic](https://anthropic.com). Framework design, rules, agents, skills, and install tooling created collaboratively with Claude Opus 4.6.
+
+**Inspired by:**
+- [mattpocock/skills](https://github.com/mattpocock/skills)
 
 ---
 

@@ -1,3 +1,8 @@
+---
+name: team-implement
+description: "Parallel subagent implementation with adversarial review. Trigger: team implement, parallel build, multi-agent build, parallel implementation"
+---
+
 # /team-implement — Parallel Subagent Implementation
 
 Spawn parallel implementation subagents to build a feature, followed by adversarial review via separate subagents. Each implementer owns specific files and runs their own TDD cycle.
@@ -28,7 +33,7 @@ Spawn parallel implementation subagents to build a feature, followed by adversar
 1. **Read the approved plan** — identify subtasks and file ownership
 2. **Validate partitioning:**
    - No file appears in two subagent assignments
-   - Config files (package.json, go.mod, etc.) are owned by exactly ONE subagent
+   - Config files (package.json, Cargo.toml, pyproject.toml, etc.) are owned by exactly ONE subagent
    - Test files are co-owned with their corresponding source files
 3. **Identify dependencies** between subtasks
 

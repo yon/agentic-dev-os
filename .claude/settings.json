@@ -34,7 +34,6 @@
       "Bash(node *)",
       "Bash(npx *)",
       "Bash(npm *)",
-      "Bash(go *)",
       "Bash(cargo *)",
       "Bash(rustc *)",
 
@@ -48,6 +47,17 @@
     ]
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/block-dangerous-git.sh \"$input.command\""
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

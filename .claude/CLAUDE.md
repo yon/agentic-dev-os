@@ -1,4 +1,4 @@
-# CLAUDE.MD — Software Project Development with Claude Code
+# CLAUDE.MD — Agentic Development Framework
 
 <!-- ============================================================
      HOW TO USE THIS TEMPLATE:
@@ -11,36 +11,96 @@
 
 **Last Updated:** [DATE]
 **Project:** [YOUR PROJECT NAME]
-**Language/Stack:** [e.g., Python 3.12 / TypeScript 5.x / Go 1.22 / Rust 1.77]
+**Language/Stack:** [e.g., Python 3.12 / TypeScript 5.x / Rust 1.77]
 **Working Branch:** main
 
+> 9 rules auto-loaded from `.claude/rules/` — see rules table below
 > Behavioral rules and subagent patterns: MEMORY.md (auto-loaded in system prompt)
-> Engineering principles: `.claude/rules/engineering-principles.md` (auto-loaded)
-> Quality gates: `.claude/rules/quality-gates.md` (auto-loaded)
-> Verification protocol: `.claude/rules/verification-protocol.md` (auto-loaded)
+
+---
+
+## The Development Loop
+
+Every task follows this loop. Skills, rules, and agents map to specific stages.
+
+```
+UNDERSTAND → PLAN → VALIDATE → BUILD → VERIFY → REVIEW → SHIP → OBSERVE
+     ↑                                                              |
+     └──────────────────────────────────────────────────────────────┘
+```
+
+| Stage | What Happens | Skills | Rule |
+|-------|-------------|--------|------|
+| **Understand** | Read `.context.md`, explore codebase | `/explore-module` | code-conventions |
+| **Plan** | Decompose into tracer bullets | `/decompose` | workflow |
+| **Validate** | Agents review the plan | `/review-plan` | workflow |
+| **Build** | TDD, one tracer bullet at a time | `/create-feature`, `/fix-bug`, `/refactor` | testing-protocol |
+| **Verify** | Linters as law, tests as contract | `/lint`, `/test` | quality-and-verification |
+| **Review** | Multi-agent code review | `/review`, `/team-review` | agent-coordination |
+| **Ship** | Small PR, one tracer bullet per PR | `/deploy` | git-and-delivery |
+| **Observe** | Tracing, context-rich outputs | — | code-conventions |
+
+**Always-on**: engineering-principles, security-practices
+
+---
+
+## Two Foundational Behaviors
+
+### 1. Module State Files (`.context.md`)
+Every module maintains a `.context.md` — Claude reads this FIRST instead of exploring. Updated after every implementation phase. See `code-conventions.md` for the template.
+
+### 2. Worktree Enforcement
+All non-trivial work happens in git worktrees. `/create-feature`, `/fix-bug`, `/refactor` start with `EnterWorktree()`. Each worktree = one branch = one PR.
 
 ---
 
 ## Quick Reference: Available Skills & Agents
 
+### Skills (14 slash commands)
+
 | Command | What It Does |
 |---------|-------------|
-| `/build` | Build the project (compile, bundle, or package) |
-| `/test [scope]` | Run test suite — unit, integration, or all |
-| `/lint [files]` | Run linters, formatters, and static analysis |
-| `/review [files]` | Multi-agent code review (spawns subagents via Task tool) |
+| `/test [scope]` | Run test suite — unit, integration, e2e, mutation, property, flaky |
+| `/lint [files]` | Run linters, formatters, static analysis; `/lint setup` scaffolds linter stack |
+| `/review [files]` | Multi-agent code review; `/review --plan` reviews plans |
+| `/review-plan [file]` | Review implementation plans before building |
 | `/security-audit [scope]` | Security review: OWASP, deps, secrets, permissions |
 | `/deploy [env]` | Deploy to target environment (staging/production) |
-| `/create-feature [name]` | Full TDD feature workflow with planning |
-| `/fix-bug [issue]` | Bug fix: reproduce, root cause, test, fix, verify |
-| `/refactor [scope]` | Safe refactoring with test-first verification |
+| `/create-feature [name]` | Full TDD feature workflow with tracer bullets |
+| `/fix-bug [issue]` | Root cause analysis + regression test workflow |
+| `/refactor [scope]` | Safe incremental refactoring with characterization tests |
+| `/explore-module [path]` | Build/update `.context.md` for a module |
+| `/decompose [feature]` | Break features into tracer bullet stories/tasks |
+| `/swarm [task]` | General-purpose parallel subagent orchestration |
 | `/team-review [scope]` | Parallel subagent review (4 reviewers simultaneously) |
 | `/team-implement [plan]` | Parallel subagent implementation with adversarial review |
-| `/swarm [task]` | General-purpose parallel subagent orchestration |
 
-**Agents** (`.claude/agents/`): code-reviewer, security-reviewer, architecture-reviewer, test-reviewer, performance-reviewer, doc-reviewer, verifier, team-lead
+### Agents (8 specialists in `.claude/agents/`)
 
-**Rules** (auto-loaded from `.claude/rules/`): plan-first-workflow, orchestrator-protocol, quality-gates, verification-protocol, engineering-principles, testing-protocol, security-practices, git-workflow, code-conventions, agent-teams
+| Agent | Focus |
+|-------|-------|
+| code-reviewer | Correctness, readability, engineering principles |
+| security-reviewer | OWASP top 10, secrets, input validation |
+| architecture-reviewer | SOLID, coupling, module boundaries, scalability |
+| test-reviewer | TDD compliance, coverage gaps, test quality |
+| performance-reviewer | Algorithmic complexity, N+1 queries, memory |
+| doc-reviewer | API docs, README accuracy, stale docs |
+| verifier | Runs build/test/lint, binary pass/fail |
+| team-lead | Coordinates subagent teams, adversarial separation |
+
+### Rules (9 auto-loaded from `.claude/rules/`)
+
+| Rule | Governs |
+|------|---------|
+| workflow | 8-stage dev loop, plan-first, session logging, context preservation |
+| orchestrator | Autonomous implement → verify → review → fix → score loop |
+| quality-and-verification | 80/90/95 scoring, verification checklist |
+| git-and-delivery | Branches, commits, PRs, work decomposition, tracer bullets |
+| agent-coordination | Parallel subagents, worktrees, tool preferences |
+| engineering-principles | DRY, KISS, SOLID, immutability, fail fast, context-in-errors |
+| code-conventions | Naming, linters-as-law, observability, `.context.md` |
+| testing-protocol | TDD, advanced testing (property, mutation, contract, snapshot) |
+| security-practices | OWASP, secrets, auth/authz, dependency security |
 
 ---
 
@@ -56,11 +116,11 @@
 
 | Layer | Technology | Version |
 |-------|-----------|---------|
-| Language | [e.g., Python / TypeScript / Go / Rust] | [version] |
+| Language | [e.g., Python / TypeScript / Rust] | [version] |
 | Framework | [e.g., FastAPI / Next.js / Gin / Axum] | [version] |
 | Database | [e.g., PostgreSQL / Redis / SQLite] | [version] |
 | Testing | [e.g., pytest / vitest / go test] | [version] |
-| Linting | [e.g., ruff / eslint / golangci-lint / clippy] | [version] |
+| Linting | [e.g., ruff / eslint / clippy] | [version] |
 | CI/CD | [e.g., GitHub Actions / GitLab CI] | — |
 | Packaging | [e.g., pip / npm / docker] | — |
 
@@ -75,21 +135,24 @@
 ├── .claude/                           # Claude Code configuration
 │   ├── CLAUDE.md                      # This file — Claude's project guide
 │   ├── settings.json                  # Project permissions + hooks
-│   ├── rules/                         # Engineering rules (auto-loaded)
-│   ├── skills/                        # Slash commands (/build, /test, /swarm, etc.)
-│   └── agents/                        # Specialized agents (review + team-lead)
+│   ├── hooks/                         # Git guardrails
+│   │   └── block-dangerous-git.sh     # Blocks destructive git commands
+│   ├── rules/                         # 9 engineering rules (auto-loaded)
+│   ├── skills/                        # 14 slash commands + supporting files
+│   └── agents/                        # 8 specialized agents
 ├── src/                               # Application source code
 │   └── [YOUR STRUCTURE]
+│   └── [module]/.context.md           # Module state files (auto-maintained)
 ├── tests/                             # Test suite
-│   ├── unit/                          # Unit tests
-│   ├── integration/                   # Integration tests
-│   └── e2e/                           # End-to-end tests (if applicable)
-├── scripts/                           # Utility and CI scripts
-│   └── score.py               # Automated quality scoring (0-100)
+│   ├── unit/
+│   ├── integration/
+│   └── e2e/
+├── scripts/
+│   └── score.py                       # Automated quality scoring (0-100)
 ├── docs/                              # Project documentation
-├── working/                    # Review & planning artifacts
+├── working/                           # Review & planning artifacts
 │   ├── plans/                         # Saved implementation plans
-│   └── logs/                  # Session history and decision logs
+│   └── logs/                          # Session history and decision logs
 └── [CONFIG FILES]                     # .env.example, pyproject.toml, etc.
 ```
 
@@ -148,8 +211,9 @@ make deploy-production # Deploy to production (requires confirmation)
 - **Commit style:** Conventional Commits (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`)
 - **Before every PR:** Run `make check` and `/review`
 - **Merge strategy:** Squash and merge for features, regular merge for releases
+- **PR size:** <10 files, <300 lines, <30 min review
 
-See `.claude/rules/git-workflow.md` for the full protocol.
+See `.claude/rules/git-and-delivery.md` for the full protocol.
 
 ---
 

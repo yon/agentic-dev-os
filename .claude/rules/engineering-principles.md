@@ -1,8 +1,3 @@
----
-paths:
-  - "src/**"
-  - "tests/**"
----
 
 # Engineering Principles — Enforcement Rules
 
@@ -134,6 +129,21 @@ Detect and report errors as early as possible. Invalid input should be rejected 
 - **Assertions for invariants:** Use assertions for conditions that should NEVER be false. If they fire, it's a bug.
 - **No silent failures:** Never catch an exception and do nothing. Log, re-raise, or return an error.
 - **Parse, don't validate:** Convert untyped data to typed domain objects at the boundary. After that point, the type system guarantees validity.
+
+### Context in Errors
+
+Every error message should include enough context to diagnose the issue without reproducing it:
+- **Operation** — what was being attempted
+- **Inputs** — the relevant data (sanitized of secrets)
+- **Expected outcome** — what should have happened
+- **Actual outcome** — what actually happened
+
+```
+BAD:  "Failed to process order"
+GOOD: "Failed to process order #12345: payment gateway returned 503 for charge of $49.99 (customer: user_abc, gateway: stripe)"
+```
+
+Cross-reference: See `code-conventions.md` for context-rich output patterns and observability standards.
 
 ---
 

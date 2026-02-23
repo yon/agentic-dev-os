@@ -140,7 +140,7 @@ def _project_root() -> Path:
     """Find the project root (directory containing CLAUDE.md or Makefile)."""
     current = Path.cwd()
     for parent in [current, *current.parents]:
-        if (parent / "CLAUDE.md").exists() or (parent / "Makefile").exists():
+        if (parent / ".claude" / "CLAUDE.md").exists() or (parent / "Makefile").exists():
             return parent
     return current
 
